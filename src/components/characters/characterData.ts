@@ -6,17 +6,31 @@ export interface CharacterOption {
   gradientTo: string
 }
 
-// Placeholder colored-shape avatars — swap the emoji/gradients here for real
-// Rive character files later without touching any calling code.
 export const CHARACTERS: CharacterOption[] = [
-  { id: 'coral-fox', name: 'Foxy', emoji: '🦊', gradientFrom: '#FF9E7D', gradientTo: '#FF6F91' },
-  { id: 'mint-panda', name: 'Panda', emoji: '🐼', gradientFrom: '#8FE3C6', gradientTo: '#5EC8A6' },
-  { id: 'butter-duck', name: 'Ducky', emoji: '🦆', gradientFrom: '#FFE9A8', gradientTo: '#FFC65C' },
-  { id: 'sky-cat', name: 'Kitty', emoji: '🐱', gradientFrom: '#A8D8FF', gradientTo: '#6FB3F2' },
-  { id: 'berry-bunny', name: 'Bunny', emoji: '🐰', gradientFrom: '#F3B3FF', gradientTo: '#C77DFF' },
-  { id: 'cloud-koala', name: 'Koala', emoji: '🐨', gradientFrom: '#D8D8E8', gradientTo: '#A9A9C1' },
-  { id: 'sunny-lion', name: 'Leo', emoji: '🦁', gradientFrom: '#FFD166', gradientTo: '#FF9E44' },
-  { id: 'ocean-penguin', name: 'Pingu', emoji: '🐧', gradientFrom: '#B4E4FF', gradientTo: '#6FCF97' },
+  // MCU
+  { id: 'mcu-iron-man', name: 'Iron Man', emoji: '🦾', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'mcu-captain-america', name: 'Captain America', emoji: '🛡️', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'mcu-black-widow', name: 'Black Widow', emoji: '🕷️', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'mcu-thor', name: 'Thor', emoji: '⚡', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'mcu-doctor-strange', name: 'Doctor Strange', emoji: '🪄', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  // DC
+  { id: 'dc-batman', name: 'Batman', emoji: '🦇', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'dc-superman', name: 'Superman', emoji: '🦸', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'dc-wonder-woman', name: 'Wonder Woman', emoji: '⭐', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'dc-flash', name: 'The Flash', emoji: '⚡', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'dc-aquaman', name: 'Aquaman', emoji: '🌊', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  // X-Men
+  { id: 'xmen-wolverine', name: 'Wolverine', emoji: '🐺', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'xmen-storm', name: 'Storm', emoji: '🌩️', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'xmen-cyclops', name: 'Cyclops', emoji: '👁️', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'xmen-jean-grey', name: 'Jean Grey', emoji: '🔥', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'xmen-magneto', name: 'Magneto', emoji: '🧲', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  // Anime
+  { id: 'anime-goku', name: 'Goku', emoji: '🐉', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'anime-naruto', name: 'Naruto', emoji: '🍥', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'anime-luffy', name: 'Luffy', emoji: '🏴‍☠️', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'anime-gojo', name: 'Gojo', emoji: '👁️', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
+  { id: 'anime-levi', name: 'Levi', emoji: '⚔️', gradientFrom: '#2a2a2a', gradientTo: '#1a1a1a' },
 ]
 
 export function getCharacter(characterId: string) {
