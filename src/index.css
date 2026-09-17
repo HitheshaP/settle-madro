@@ -2,28 +2,40 @@
 
 @theme {
   --font-sans:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+    'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+  --font-serif:
+    'Crimson Pro', 'Georgia', serif;
 
-  /* Warm, friendly palette — premium-but-cute */
-  --color-cream: #fff8f3;
-  --color-cream-dim: #fbeee4;
-  --color-coral: #ff6f91;
-  --color-coral-dark: #e8547a;
-  --color-peach: #ff9e7d;
-  --color-butter: #ffd166;
-  --color-mint: #5ec8a6;
-  --color-ink: #3a2e32;
-  --color-muted: #8a7a80;
-  --color-border-soft: #f0e2d8;
+  /* Studio Ghibli Inspired Palette */
+  /* Backgrounds: Warm parchment and soft creams */
+  --color-ghibli-parchment: #fdfaf3;
+  --color-ghibli-cream: #f9f3e8;
+  
+  /* Primary Colors: Muted anime tones */
+  --color-ghibli-moss: #5d7a5c;
+  --color-ghibli-moss-light: #7a9c79;
+  --color-ghibli-terracotta: #c46d52;
+  --color-ghibli-sky: #a4c5d4;
+  --color-ghibli-gold: #d4a373;
+  
+  /* Accents & Ink */
+  --color-ghibli-ink: #2d2a26;
+  --color-ghibli-muted: #7d756d;
+  --color-ghibli-border: #e6dec9;
+  --color-ghibli-glow: rgba(212, 163, 115, 0.2);
 
-  --radius-card: 20px;
-  --radius-pill: 999px;
+  --radius-story: 22px;
+  --radius-story-sm: 14px;
 
-  --shadow-soft: 0 8px 24px -8px rgba(58, 46, 50, 0.18);
-  --shadow-lift: 0 14px 32px -10px rgba(232, 84, 122, 0.35);
+  /* Diffused, warm shadows */
+  --shadow-ghibli-soft: 0 10px 30px -10px rgba(45, 42, 38, 0.12);
+  --shadow-ghibli-warm: 0 12px 35px -8px rgba(196, 109, 82, 0.15);
+  --shadow-ghibli-glow: 0 0 20px 0 rgba(212, 163, 115, 0.3);
 }
 
 @layer base {
+  @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Quicksand:wght@400;500;600;700&display=swap');
+
   :root {
     color-scheme: light;
   }
@@ -31,16 +43,23 @@
   html,
   body {
     height: 100%;
+    /* Subtle organic paper texture effect */
+    background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
   }
 
   body {
     margin: 0;
-    background: var(--color-cream);
-    color: var(--color-ink);
+    background-color: var(--color-ghibli-parchment);
+    color: var(--color-ghibli-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overscroll-behavior-y: none;
+  }
+
+  h1, h2, h3, .serif {
+    font-family: var(--font-serif);
+    font-weight: 600;
   }
 
   #root {
@@ -51,6 +70,12 @@
 
   button {
     font-family: inherit;
+  }
+
+  /* Custom line-art focus state */
+  :focus-visible {
+    outline: 2px solid var(--color-ghibli-gold);
+    outline-offset: 4px;
   }
 }
 
@@ -70,4 +95,21 @@
 @utility tap-target {
   min-height: 44px;
   min-width: 44px;
+}
+
+/* Storybook card ornament utility */
+@utility card-ornament {
+  position: relative;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    border: 1px solid var(--color-ghibli-border);
+    border-radius: calc(var(--radius-story) - 8px);
+    pointer-events: none;
+    opacity: 0.5;
+  }
 }
