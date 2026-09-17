@@ -3,22 +3,23 @@ import type { ReactNode } from 'react'
 
 interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
   children: ReactNode
-  variant?: 'primary' | 'secondary' | 'ghost'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'accent'
 }
 
 const variantStyles: Record<NonNullable<ButtonProps['variant']>, string> = {
-  primary: 'bg-coral text-white shadow-[var(--shadow-lift)]',
-  secondary: 'bg-white text-ink shadow-[var(--shadow-soft)] border border-[var(--color-border-soft)]',
-  ghost: 'bg-transparent text-coral',
+  primary: 'bg-ghibli-moss text-white shadow-ghibli-soft border-b-4 border-black/20 active:border-b-0 active:translate-y-[2px]',
+  secondary: 'bg-ghibli-cream text-ghibli-ink shadow-ghibli-soft border border-ghibli-border',
+  ghost: 'bg-transparent text-ghibli-moss font-serif italic',
+  accent: 'bg-ghibli-terracotta text-white shadow-ghibli-warm border-b-4 border-black/20 active:border-b-0 active:translate-y-[2px]',
 }
 
 export default function Button({ children, variant = 'primary', className = '', ...props }: ButtonProps) {
   return (
     <motion.button
-      whileTap={{ scale: 0.96 }}
-      whileHover={{ scale: 1.02 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-      className={`tap-target flex items-center justify-center gap-2 rounded-[var(--radius-pill)] px-6 py-3 text-base font-semibold disabled:opacity-50 ${variantStyles[variant]} ${className}`}
+      whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.01 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      className={`tap-target flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-base font-semibold transition-all disabled:opacity-50 ${variantStyles[variant]} ${className}`}
       {...props}
     >
       {children}
