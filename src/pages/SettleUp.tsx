@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
@@ -25,6 +25,7 @@ function settlementKey(settlement: SimplifiedSettlement) {
 
 export default function SettleUp() {
   const { groupId } = useParams<{ groupId: string }>()
+  const navigate = useNavigate()
 
   const [group, setGroup] = useState<Group | null>(null)
   const [expenses, setExpenses] = useState<Expense[]>([])
@@ -60,20 +61,31 @@ export default function SettleUp() {
     try {
       await recordSettlement(groupId, settlement)
     } catch {
-      // Offline — the optimistic local state above keeps the UI in sync either way.
+      // Local fallback
     }
   }
 
   return (
-    <div className="safe-top safe-bottom safe-x flex flex-1 flex-col gap-4 px-5 py-8">
-      <h1 className="text-2xl font-semibold text-ink">Settle Up</h1>
-      {group && <p className="text-muted">Simplified so everyone pays the fewest times possible.</p>}
+    <div className="safe-top safe-bottom safe-x flex flex-1 flex-col gap-6 px-6 py-6 bg-apple-bg min-h-screen">
+      <div className="flex flex-col gap-1.5 mt-2">
+        <button 
+          onClick={() => navigate(`/groups/${groupId}`)}
+          className="text-apple-accent font-semibold text-sm flex items-center gap-1 mb-2 self-start hover:opacity-85 transition-opacity"
+        >
+          <span className="text-base">‹</span> Back
+        </button>
+        <h1 className="text-3xl font-extrabold tracking-tight text-apple-text">Settle Up</h1>
+        {group && <p className="text-sm text-apple-text-secondary leading-relaxed">Transactions simplified to optimize payment efficiency.</p>}
+      </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <AnimatePresence>
           {visible.length === 0 && (
-            <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Card className="text-center text-muted">Everyone's all settled up! 🎉</Card>
+            <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+              <Card className="text-center bg-white/[0.02] border border-apple-border p-8">
+                <p className="text-sm font-semibold text-apple-text">Everything is settled! 🎉</p>
+                <p className="text-xs text-apple-text-secondary mt-1 font-medium">All accounts are fully balanced.</p>
+              </Card>
             </motion.div>
           )}
 
@@ -85,24 +97,31 @@ export default function SettleUp() {
               <motion.div
                 key={settlementKey(settlement)}
                 layout
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ delay: index * 0.08, type: 'spring', stiffness: 260, damping: 24 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ delay: index * 0.05, ease: [0.25, 1, 0.5, 1], duration: 0.3 }}
               >
-                <Card className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <CharacterAvatar characterId={from?.characterId ?? ''} size={44} />
-                    <div className="text-sm">
-                      <p className="font-medium text-ink">
-                        {from?.name ?? '...'} owes {to?.name ?? '...'}
-                      </p>
-                      <p className="font-semibold text-coral-dark">₹{settlement.amount.toFixed(2)}</p>
+                <Card className="flex items-center justify-between bg-white/[0.02] border border-apple-border hover:bg-white/[0.04] transition-all duration-200 p-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="p-0.5 bg-[#1c1c1e] rounded-full border border-apple-border shadow-sm">
+                      <CharacterAvatar characterId={from?.characterId ?? ''} size={36} />
                     </div>
-                    <CharacterAvatar characterId={to?.characterId ?? ''} size={44} />
+                    
+                    <div className="flex flex-col">
+                      <p className="text-sm font-bold tracking-tight text-apple-text">
+                        {from?.name ?? '...'}
+                      </p>
+                      <p className="text-[11px] text-apple-text-secondary font-medium">owes {to?.name ?? '...'}</p>
+                      <p className="text-sm font-extrabold tracking-tight text-apple-accent mt-0.5">₹{settlement.amount.toFixed(0)}</p>
+                    </div>
+
+                    <div className="p-0.5 bg-[#1c1c1e] rounded-full border border-apple-border shadow-sm">
+                      <CharacterAvatar characterId={to?.characterId ?? ''} size={36} />
+                    </div>
                   </div>
-                  <Button className="px-4 py-2 text-sm" onClick={() => setAnimating(settlement)}>
-                    Settled
+                  <Button className="px-4.5 py-2 text-xs font-bold" onClick={() => setAnimating(settlement)}>
+                    Settle
                   </Button>
                 </Card>
               </motion.div>

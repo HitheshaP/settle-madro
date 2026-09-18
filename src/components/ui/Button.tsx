@@ -7,23 +7,19 @@ interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
 }
 
 const variantStyles: Record<NonNullable<ButtonProps['variant']>, string> = {
-  primary:
-    'bg-[#1a1a1a]/80 text-white border border-white/[0.08] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:bg-[#1a1a1a]/90 hover:border-white/[0.14] hover:shadow-[0_12px_40px_rgba(0,0,0,0.45)]',
-  secondary:
-    'bg-white/[0.04] text-white/90 border border-white/[0.08] backdrop-blur-xl shadow-[0_4px_16px_rgba(0,0,0,0.2)] hover:bg-white/[0.08] hover:border-white/[0.14] hover:text-white',
-  ghost:
-    'bg-transparent text-white/70 hover:text-white border border-transparent hover:border-white/[0.08] backdrop-blur-md',
-  accent:
-    'bg-[#10b981]/15 text-[#10b981] border border-[#10b981]/20 backdrop-blur-xl shadow-[0_4px_16px_rgba(16,185,129,0.15)] hover:bg-[#10b981]/25 hover:border-[#10b981]/30 hover:text-[#34d399]',
+  primary: 'bg-apple-accent text-white shadow-apple-smooth hover:shadow-apple-accent-glow hover:brightness-105 active:brightness-95',
+  secondary: 'glass-surface hover:bg-white/[0.08] active:bg-white/[0.02] text-apple-text border border-apple-border',
+  ghost: 'bg-transparent text-apple-accent hover:bg-apple-accent/5 active:bg-apple-accent/10',
+  accent: 'bg-white text-black shadow-apple-smooth hover:bg-neutral-100 active:bg-neutral-200 font-semibold',
 }
 
 export default function Button({ children, variant = 'primary', className = '', ...props }: ButtonProps) {
   return (
     <motion.button
-      whileTap={{ scale: 0.97 }}
-      whileHover={{ scale: 1.015 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 25, duration: 0.2 }}
-      className={`tap-target flex items-center justify-center gap-2.5 rounded-2xl px-7 py-3.5 text-[0.9375rem] font-medium tracking-[-0.01em] transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] disabled:opacity-40 disabled:cursor-not-allowed ${variantStyles[variant]} ${className}`}
+      whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.01 }}
+      transition={{ type: 'tween', ease: [0.25, 1, 0.5, 1], duration: 0.2 }}
+      className={`tap-target flex items-center justify-center gap-2 rounded-[var(--radius-apple-md)] px-6 py-3.5 text-sm font-medium tracking-wide transition-colors duration-200 disabled:opacity-40 disabled:pointer-events-none ${variantStyles[variant]} ${className}`}
       {...props}
     >
       {children}
