@@ -6,15 +6,15 @@ interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export default function TextInput({ label, id, className = '', ...props }: TextInputProps) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5 w-full">
       {label && (
-        <label htmlFor={id} className="text-sm font-medium text-muted">
+        <label htmlFor={id} className="text-[12px] font-semibold text-apple-text-secondary uppercase tracking-widest pl-1">
           {label}
         </label>
       )}
       <input
         id={id}
-        className={`tap-target w-full rounded-2xl border border-[var(--color-border-soft)] bg-white px-4 py-3 text-base text-ink outline-none transition focus:border-[var(--color-coral)] ${className}`}
+        className={`apple-input tap-target w-full px-4 py-3 text-base outline-none ${className}`}
         {...props}
       />
     </div>

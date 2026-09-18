@@ -44,7 +44,7 @@ export default function Groups() {
       closeModal()
       navigate(`/groups/${groupId}`)
     } catch {
-      setError('Could not reach the server — check your connection and try again.')
+      setError('Connection timeout. Please retry.')
     } finally {
       setBusy(false)
     }
@@ -59,25 +59,29 @@ export default function Groups() {
       closeModal()
       navigate(`/groups/${groupId}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <div className="safe-top safe-bottom safe-x flex flex-1 flex-col gap-5 px-5 py-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-ink">Your Groups</h1>
-          {user && <p className="text-muted">Hey {user.name} 👋</p>}
+    <div className="safe-top safe-bottom safe-x flex flex-1 flex-col gap-6 px-6 py-6 bg-apple-bg min-h-screen">
+      <div className="flex items-center justify-between mt-2">
+        <div className="flex flex-col gap-0.5">
+          <h1 className="text-3xl font-extrabold tracking-tight text-apple-text">Groups</h1>
+          {user && <p className="text-sm font-medium text-apple-text-secondary">Signed in as {user.name}</p>}
         </div>
-        {user && <CharacterAvatar characterId={user.characterId} size={48} />}
+        {user && (
+          <div className="p-0.5 bg-white/5 rounded-full border border-apple-border shadow-apple-smooth">
+            <CharacterAvatar characterId={user.characterId} size={44} />
+          </div>
+        )}
       </div>
 
-      {authError && <OfflineBanner message="Firebase isn't connected yet — groups will sync once configured." />}
+      {authError && <OfflineBanner message="Offline Cache Mode · Local replication active" />}
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3.5">
         <AnimatePresence>
           {groups.map((group, index) => (
             <motion.div
@@ -85,8 +89,8 @@ export default function Groups() {
               layout
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ delay: index * 0.05, type: 'spring', stiffness: 260, damping: 24 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ delay: index * 0.04, ease: [0.25, 1, 0.5, 1], duration: 0.3 }}
             >
               <GroupCard group={group} onOpen={() => navigate(`/groups/${group.id}`)} />
             </motion.div>
@@ -94,15 +98,17 @@ export default function Groups() {
         </AnimatePresence>
 
         {groups.length === 0 && (
-          <Card className="text-center text-muted">No groups yet — create or join one to get started.</Card>
+          <Card className="text-center bg-white/[0.02] border border-apple-border p-8">
+            <p className="text-sm text-apple-text-secondary font-medium py-2">No active groups. Create or join one to begin.</p>
+          </Card>
         )}
       </div>
 
-      <div className="mt-auto flex gap-3">
-        <Button variant="secondary" className="flex-1" onClick={() => setModal('join')}>
+      <div className="mt-auto flex gap-3.5 pt-4">
+        <Button variant="secondary" className="flex-1 font-semibold text-sm" onClick={() => setModal('join')}>
           Join Group
         </Button>
-        <Button className="flex-1" onClick={() => setModal('create')}>
+        <Button variant="primary" className="flex-1 font-semibold text-sm" onClick={() => setModal('create')}>
           Create Group
         </Button>
       </div>
@@ -113,33 +119,36 @@ export default function Groups() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="safe-x fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+            className="safe-x fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm"
             onClick={closeModal}
           >
             <motion.div
-              initial={{ y: 80 }}
+              initial={{ y: "100%" }}
               animate={{ y: 0 }}
-              exit={{ y: 80 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-              className="safe-bottom w-full max-w-sm rounded-t-[var(--radius-card)] bg-white p-6"
+              exit={{ y: "100%" }}
+              transition={{ ease: [0.25, 1, 0.5, 1], duration: 0.35 }}
+              className="safe-bottom w-full max-w-md rounded-t-[24px] bg-[#1c1c1e]/90 border-t border-apple-border p-6 shadow-apple-intense backdrop-blur-[30px]"
               onClick={(event) => event.stopPropagation()}
             >
-              <h2 className="mb-4 text-lg font-semibold text-ink">
-                {modal === 'create' ? 'Create a group' : 'Join a group'}
+              <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-white/10" />
+              <h2 className="mb-5 text-xl font-bold tracking-tight text-apple-text">
+                {modal === 'create' ? 'New Group' : 'Join Group'}
               </h2>
               <TextInput
-                placeholder={modal === 'create' ? 'Group name' : '6-digit code'}
+                placeholder={modal === 'create' ? 'Group Name' : 'Invite Code'}
+                label={modal === 'create' ? 'Name' : 'Code'}
                 value={inputValue}
                 onChange={(event) => setInputValue(event.target.value)}
                 autoFocus
               />
-              {error && <p className="mt-2 text-sm text-coral-dark">{error}</p>}
+              {error && <p className="mt-2.5 text-xs text-rose-500 font-medium">{error}</p>}
               <Button
-                className="mt-4 w-full"
+                variant={modal === 'create' ? 'primary' : 'accent'}
+                className="mt-6 w-full py-4 text-sm font-semibold"
                 disabled={busy || !inputValue.trim()}
                 onClick={modal === 'create' ? handleCreate : handleJoin}
               >
-                {busy ? 'Please wait...' : modal === 'create' ? 'Create' : 'Join'}
+                {busy ? 'Processing...' : modal === 'create' ? 'Create' : 'Join'}
               </Button>
             </motion.div>
           </motion.div>
@@ -153,19 +162,25 @@ function GroupCard({ group, onOpen }: { group: Group; onOpen: () => void }) {
   const profiles = useProfiles(group.memberIds)
 
   return (
-    <Card onClick={onOpen} whileTap={{ scale: 0.98 }} className="flex cursor-pointer items-center justify-between">
-      <div>
-        <p className="font-semibold text-ink">{group.name}</p>
-        <p className="text-sm text-muted">
-          {group.memberIds.length} members · code {group.inviteCode}
+    <Card 
+      onClick={onOpen} 
+      whileTap={{ scale: 0.98 }} 
+      className="flex cursor-pointer items-center justify-between bg-white/[0.03] hover:bg-white/[0.06] transition-colors border border-apple-border duration-200"
+    >
+      <div className="flex flex-col gap-0.5">
+        <p className="text-base font-semibold tracking-tight text-apple-text">{group.name}</p>
+        <p className="text-xs text-apple-text-secondary font-medium">
+          {group.memberIds.length} {group.memberIds.length === 1 ? 'member' : 'members'} · Code: {group.inviteCode}
         </p>
       </div>
       <div className="flex -space-x-2">
         {group.memberIds.slice(0, 4).map((uid) =>
           profiles[uid] ? (
-            <CharacterAvatar key={uid} characterId={profiles[uid].characterId} size={36} />
+            <div key={uid} className="p-0.5 bg-[#1c1c1e] rounded-full border border-apple-border shadow-sm">
+              <CharacterAvatar characterId={profiles[uid].characterId} size={32} />
+            </div>
           ) : (
-            <div key={uid} className="h-9 w-9 rounded-full bg-cream-dim" />
+            <div key={uid} className="h-8 w-8 rounded-full bg-white/5 border border-apple-border" />
           ),
         )}
       </div>

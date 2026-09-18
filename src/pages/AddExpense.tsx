@@ -48,13 +48,13 @@ export default function AddExpense() {
     setError(null)
 
     if (!groupId || !description.trim() || numericAmount <= 0 || !paidBy || splitBetween.length === 0) {
-      setError('Fill in a description, amount, payer, and at least one person to split with.')
+      setError('Required fields: description, amount, payer, and at least one member.')
       return
     }
 
     if (splitType === 'custom' && Math.abs(customTotal - numericAmount) > 0.01) {
       setError(
-        `Custom splits must add up to ₹${numericAmount.toFixed(2)} (currently ₹${customTotal.toFixed(2)}).`,
+        `Sum of custom splits (₹${customTotal.toFixed(2)}) must equal total (₹${numericAmount.toFixed(2)}).`,
       )
       return
     }
@@ -77,7 +77,7 @@ export default function AddExpense() {
       })
       navigate(`/groups/${groupId}`)
     } catch {
-      setError('Could not save — check your connection and try again.')
+      setError('Network request failed. Please check connection.')
     } finally {
       setSaving(false)
     }
@@ -87,68 +87,83 @@ export default function AddExpense() {
 
   return (
     <motion.div
-      className="safe-top safe-bottom safe-x flex flex-1 flex-col gap-5 px-5 py-8"
+      className="safe-top safe-bottom safe-x flex flex-1 flex-col gap-6 px-6 py-6 bg-apple-bg min-h-screen"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      transition={{ ease: [0.25, 1, 0.5, 1], duration: 0.3 }}
     >
-      <h1 className="text-2xl font-semibold text-ink">Add Expense</h1>
+      <div className="flex flex-col gap-1.5 mt-2">
+        <button 
+          onClick={() => navigate(`/groups/${groupId}`)}
+          className="text-apple-accent font-semibold text-sm flex items-center gap-1 mb-2 self-start hover:opacity-85 transition-opacity"
+        >
+          <span className="text-base">‹</span> Back
+        </button>
+        <h1 className="text-3xl font-extrabold tracking-tight text-apple-text">Add Expense</h1>
+      </div>
 
-      <TextInput
-        label="Description"
-        placeholder="Dinner, cab, groceries..."
-        value={description}
-        onChange={(event) => setDescription(event.target.value)}
-      />
-      <TextInput
-        label="Amount"
-        type="number"
-        inputMode="decimal"
-        placeholder="0.00"
-        value={amount}
-        onChange={(event) => setAmount(event.target.value)}
-      />
+      <div className="flex flex-col gap-5">
+        <TextInput
+          label="What was this for?"
+          placeholder="Dinner, transport, groceries..."
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+        />
+        <TextInput
+          label="How much?"
+          type="number"
+          inputMode="decimal"
+          placeholder="0.00"
+          value={amount}
+          onChange={(event) => setAmount(event.target.value)}
+        />
+      </div>
 
-      <div>
-        <p className="mb-2 text-sm font-medium text-muted">Paid by</p>
-        <div className="flex flex-wrap gap-3">
+      <div className="flex flex-col gap-3">
+        <p className="text-[12px] font-semibold text-apple-text-secondary uppercase tracking-widest pl-1">Paid By</p>
+        <div className="flex flex-wrap gap-4 pl-1">
           {group.memberIds.map((uid) => (
-            <button key={uid} onClick={() => setPaidBy(uid)} className="flex flex-col items-center gap-1">
-              <CharacterAvatar characterId={profiles[uid]?.characterId ?? ''} size={48} selected={paidBy === uid} />
-              <span className="text-xs text-muted">{profiles[uid]?.name ?? '...'}</span>
+            <button key={uid} onClick={() => setPaidBy(uid)} className="flex flex-col items-center gap-1.5 focus:outline-none">
+              <div className={`p-0.5 rounded-full transition-all duration-200 ${paidBy === uid ? 'ring-2 ring-apple-accent scale-105' : 'opacity-60 hover:opacity-80'}`}>
+                <CharacterAvatar characterId={profiles[uid]?.characterId ?? ''} size={48} />
+              </div>
+              <span className={`text-[11px] font-semibold transition-colors duration-200 ${paidBy === uid ? 'text-apple-accent' : 'text-apple-text-secondary'}`}>
+                {profiles[uid]?.name ?? '...'}
+              </span>
             </button>
           ))}
         </div>
       </div>
 
-      <div>
-        <p className="mb-2 text-sm font-medium text-muted">Split between</p>
-        <div className="flex flex-wrap gap-3">
+      <div className="flex flex-col gap-3">
+        <p className="text-[12px] font-semibold text-apple-text-secondary uppercase tracking-widest pl-1">Split Between</p>
+        <div className="flex flex-wrap gap-4 pl-1">
           {group.memberIds.map((uid) => (
-            <button key={uid} onClick={() => toggleMember(uid)} className="flex flex-col items-center gap-1">
-              <CharacterAvatar
-                characterId={profiles[uid]?.characterId ?? ''}
-                size={48}
-                selected={splitBetween.includes(uid)}
-              />
-              <span className="text-xs text-muted">{profiles[uid]?.name ?? '...'}</span>
+            <button key={uid} onClick={() => toggleMember(uid)} className="flex flex-col items-center gap-1.5 focus:outline-none">
+              <div className={`p-0.5 rounded-full transition-all duration-200 ${splitBetween.includes(uid) ? 'ring-2 ring-apple-accent scale-105' : 'opacity-40 hover:opacity-60'}`}>
+                <CharacterAvatar characterId={profiles[uid]?.characterId ?? ''} size={48} />
+              </div>
+              <span className={`text-[11px] font-semibold transition-colors duration-200 ${splitBetween.includes(uid) ? 'text-apple-accent' : 'text-apple-text-secondary'}`}>
+                {profiles[uid]?.name ?? '...'}
+              </span>
             </button>
           ))}
         </div>
       </div>
 
-      <div>
-        <p className="mb-2 text-sm font-medium text-muted">Split type</p>
+      <div className="flex flex-col gap-3">
+        <p className="text-[12px] font-semibold text-apple-text-secondary uppercase tracking-widest pl-1">Split Type</p>
         <div className="flex gap-3">
           <Button
             variant={splitType === 'equal' ? 'primary' : 'secondary'}
-            className="flex-1"
+            className="flex-1 text-sm py-3 font-semibold"
             onClick={() => setSplitType('equal')}
           >
             Equal
           </Button>
           <Button
             variant={splitType === 'custom' ? 'primary' : 'secondary'}
-            className="flex-1"
+            className="flex-1 text-sm py-3 font-semibold"
             onClick={() => setSplitType('custom')}
           >
             Custom
@@ -157,28 +172,34 @@ export default function AddExpense() {
       </div>
 
       {splitType === 'custom' && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3.5 bg-white/[0.02] border border-apple-border rounded-2xl p-4 mt-2">
           {splitBetween.map((uid) => (
-            <div key={uid} className="flex items-center justify-between gap-3">
-              <span className="text-sm text-ink">{profiles[uid]?.name ?? '...'}</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                className="tap-target w-28 rounded-2xl border border-[var(--color-border-soft)] px-3 py-2 text-right"
-                value={customSplits[uid] ?? ''}
-                onChange={(event) => setCustomSplits((prev) => ({ ...prev, [uid]: event.target.value }))}
-              />
+            <div key={uid} className="flex items-center justify-between gap-4">
+              <span className="text-sm font-semibold text-apple-text">{profiles[uid]?.name ?? '...'}</span>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 text-sm font-semibold text-apple-text-secondary">₹</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  className="apple-input tap-target w-32 pl-7 pr-3.5 py-2.5 text-right text-sm font-bold"
+                  value={customSplits[uid] ?? ''}
+                  onChange={(event) => setCustomSplits((prev) => ({ ...prev, [uid]: event.target.value }))}
+                />
+              </div>
             </div>
           ))}
-          <p className={`text-sm ${Math.abs(customTotal - numericAmount) > 0.01 ? 'text-coral-dark' : 'text-mint'}`}>
-            Total: ₹{customTotal.toFixed(2)} / ₹{numericAmount.toFixed(2)}
-          </p>
+          <div className="border-t border-apple-border/50 pt-3 mt-1 flex justify-between items-center">
+            <span className="text-xs font-bold text-apple-text-secondary">Total Allocated</span>
+            <p className={`text-sm font-bold tracking-tight ${Math.abs(customTotal - numericAmount) > 0.01 ? 'text-rose-500' : 'text-emerald-500'}`}>
+              ₹{customTotal.toFixed(0)} / ₹{numericAmount.toFixed(0)}
+            </p>
+          </div>
         </div>
       )}
 
-      {error && <p className="text-sm text-coral-dark">{error}</p>}
+      {error && <p className="text-xs text-rose-500 font-medium pl-1 italic">{error}</p>}
 
-      <Button className="mt-auto w-full" disabled={saving} onClick={handleSubmit}>
+      <Button className="mt-auto w-full py-4 text-sm font-semibold" disabled={saving} onClick={handleSubmit}>
         {saving ? 'Saving...' : 'Save Expense'}
       </Button>
     </motion.div>
