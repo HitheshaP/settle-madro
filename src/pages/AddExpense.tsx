@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import Button from '../components/ui/Button'
 import TextInput from '../components/ui/TextInput'
 import CharacterAvatar from '../components/characters/CharacterAvatar'
@@ -22,6 +22,7 @@ export default function AddExpense() {
   const [customSplits, setCustomSplits] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [justSaved, setJustSaved] = useState(false)
 
   const profiles = useProfiles(group?.memberIds ?? [])
 
@@ -75,10 +76,11 @@ export default function AddExpense() {
             }
           : {}),
       })
-      navigate(`/groups/${groupId}`)
+      setSaving(false)
+      setJustSaved(true)
+      setTimeout(() => navigate(`/groups/${groupId}`), 950)
     } catch {
       setError('Network request failed. Please check connection.')
-    } finally {
       setSaving(false)
     }
   }
@@ -199,9 +201,51 @@ export default function AddExpense() {
 
       {error && <p className="text-xs text-rose-500 font-medium pl-1 italic">{error}</p>}
 
-      <Button className="mt-auto w-full py-4 text-sm font-semibold" disabled={saving} onClick={handleSubmit}>
+      <Button
+        className="mt-auto w-full py-4 text-sm font-semibold"
+        disabled={saving || justSaved}
+        onClick={handleSubmit}
+      >
         {saving ? 'Saving...' : 'Save Expense'}
       </Button>
+
+      <AnimatePresence>
+        {justSaved && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 280, damping: 18 }}
+              className="relative flex flex-col items-center gap-3"
+            >
+              <motion.div
+                className="flex h-20 w-20 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-500/15 text-4xl"
+                animate={{ rotate: [0, -8, 8, 0] }}
+                transition={{ duration: 0.5 }}
+              >
+                💸
+              </motion.div>
+              <p className="text-sm font-bold text-apple-text">Expense Added</p>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <motion.span
+                  key={i}
+                  className="pointer-events-none absolute top-2 left-1/2 text-lg"
+                  initial={{ opacity: 0, x: 0, y: 0 }}
+                  animate={{ opacity: [0, 1, 0], x: (i - 2.5) * 16, y: -60 - i * 4 }}
+                  transition={{ duration: 0.9, delay: 0.1 + i * 0.05, ease: 'easeOut' }}
+                >
+                  🪙
+                </motion.span>
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }

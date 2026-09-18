@@ -69,7 +69,16 @@ export default function Groups() {
     <div className="safe-top safe-bottom safe-x flex flex-1 flex-col gap-6 px-6 py-6 bg-apple-bg min-h-screen">
       <div className="flex items-center justify-between mt-2">
         <div className="flex flex-col gap-0.5">
-          <h1 className="text-3xl font-extrabold tracking-tight text-apple-text">Groups</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-extrabold tracking-tight text-apple-text">Groups</h1>
+            <motion.span
+              className="text-xl"
+              animate={{ rotateY: [0, 180, 360] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
+            >
+              🪙
+            </motion.span>
+          </div>
           {user && <p className="text-sm font-medium text-apple-text-secondary">Signed in as {user.name}</p>}
         </div>
         {user && (
@@ -131,9 +140,19 @@ export default function Groups() {
               onClick={(event) => event.stopPropagation()}
             >
               <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-white/10" />
-              <h2 className="mb-5 text-xl font-bold tracking-tight text-apple-text">
-                {modal === 'create' ? 'New Group' : 'Join Group'}
-              </h2>
+              <div className="mb-5 flex items-center gap-3">
+                <motion.div
+                  initial={{ scale: 0.6, opacity: 0, rotate: -10 }}
+                  animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 20 }}
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/5 border border-apple-border text-xl"
+                >
+                  {modal === 'create' ? '🎉' : '🔗'}
+                </motion.div>
+                <h2 className="text-xl font-bold tracking-tight text-apple-text">
+                  {modal === 'create' ? 'New Group' : 'Join Group'}
+                </h2>
+              </div>
               <TextInput
                 placeholder={modal === 'create' ? 'Group Name' : 'Invite Code'}
                 label={modal === 'create' ? 'Name' : 'Code'}

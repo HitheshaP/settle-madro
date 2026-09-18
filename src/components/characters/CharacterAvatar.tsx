@@ -15,17 +15,19 @@ export default function CharacterAvatar({ characterId, size = 56, selected, onCl
   return (
     <Comp
       onClick={onClick}
-      whileTap={onClick ? { scale: 0.97 } : undefined}
-      transition={{ type: 'spring', stiffness: 400, damping: 25, duration: 0.2 }}
+      whileTap={onClick ? { scale: 0.94 } : undefined}
+      whileHover={onClick ? { scale: 1.06 } : undefined}
+      animate={selected ? { scale: [1, 1.08, 1] } : { scale: 1 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 22, duration: 0.2 }}
       className="relative flex shrink-0 items-center justify-center rounded-full overflow-hidden"
       style={{
         width: size,
         height: size,
         background: `linear-gradient(135deg, ${character.gradientFrom}, ${character.gradientTo})`,
         fontSize: size * 0.45,
-        border: selected ? '2px solid rgba(255,255,255,0.9)' : '2px solid rgba(255,255,255,0.08)',
+        border: selected ? `2px solid ${character.glow}` : '2px solid rgba(255,255,255,0.08)',
         boxShadow: selected
-          ? '0 0 0 3px rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.35)'
+          ? `0 0 0 3px ${character.glow}33, 0 0 22px ${character.glow}55, 0 8px 24px rgba(0,0,0,0.4)`
           : '0 4px 16px rgba(0,0,0,0.25)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
@@ -36,7 +38,10 @@ export default function CharacterAvatar({ characterId, size = 56, selected, onCl
         {character.emoji}
       </span>
       {selected && (
-        <span className="absolute inset-0 rounded-full ring-1 ring-inset ring-white/20" />
+        <span
+          className="absolute inset-0 rounded-full ring-1 ring-inset"
+          style={{ boxShadow: `inset 0 0 0 1px ${character.glow}66` }}
+        />
       )}
     </Comp>
   )

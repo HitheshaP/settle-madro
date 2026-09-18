@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import CharacterAvatar from '../components/characters/CharacterAvatar'
-import { CHARACTERS } from '../components/characters/characterData'
+import CharacterPicker from '../components/characters/CharacterPicker'
+import { CHARACTERS, getCharacter } from '../components/characters/characterData'
 import Button from '../components/ui/Button'
 import TextInput from '../components/ui/TextInput'
 import Card from '../components/ui/Card'
@@ -84,24 +85,14 @@ export default function Onboarding() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ ease: [0.25, 1, 0.5, 1], duration: 0.4 }}
-            className="flex w-full max-w-sm flex-col items-center"
+            className="flex w-full max-w-md flex-col items-center"
           >
-            <Card className="flex w-full flex-col items-center gap-6 text-center border border-apple-border shadow-apple-intense">
+            <Card className="flex w-full flex-col items-center gap-5 text-center border border-apple-border shadow-apple-intense">
               <div className="flex flex-col gap-1.5">
-                <h1 className="text-2xl font-bold tracking-tight text-apple-text">Choose Avatar</h1>
-                <p className="text-sm text-apple-text-secondary">Select a visual identity for transactions</p>
+                <h1 className="text-2xl font-bold tracking-tight text-apple-text">Choose Your Character</h1>
+                <p className="text-sm text-apple-text-secondary">Pick who represents you in every transaction</p>
               </div>
-              <div className="grid grid-cols-3 gap-5 py-2">
-                {CHARACTERS.map((character) => (
-                  <CharacterAvatar
-                    key={character.id}
-                    characterId={character.id}
-                    size={72}
-                    selected={character.id === characterId}
-                    onClick={() => setCharacterId(character.id)}
-                  />
-                ))}
-              </div>
+              <CharacterPicker value={characterId} onChange={setCharacterId} />
               {authError && (
                 <p className="text-xs text-rose-500 font-medium">
                   Authentication issue. Check network or Firebase setup.
@@ -127,8 +118,31 @@ export default function Onboarding() {
             transition={{ ease: [0.25, 1, 0.5, 1], duration: 0.3 }}
             className="flex flex-col items-center gap-5 text-center"
           >
-            <div className="p-1 bg-white/5 rounded-full border border-apple-border shadow-apple-smooth">
+            <div className="relative p-1 bg-white/5 rounded-full border border-apple-border shadow-apple-smooth">
+              <motion.span
+                className="absolute inset-0 rounded-full"
+                initial={{ scale: 0.8, opacity: 0.6 }}
+                animate={{ scale: 1.6, opacity: 0 }}
+                transition={{ duration: 1.1, ease: 'easeOut' }}
+                style={{ boxShadow: `0 0 0 3px ${getCharacter(characterId).glow}` }}
+              />
               <CharacterAvatar characterId={characterId} size={100} />
+              {['🪙', '✨', '🎉', '💫'].map((icon, i) => (
+                <motion.span
+                  key={icon}
+                  className="pointer-events-none absolute left-1/2 top-1/2 text-xl"
+                  initial={{ x: 0, y: 0, opacity: 0, scale: 0.5 }}
+                  animate={{
+                    x: Math.cos((i / 4) * Math.PI * 2) * 70,
+                    y: Math.sin((i / 4) * Math.PI * 2) * 70,
+                    opacity: [0, 1, 0],
+                    scale: 1,
+                  }}
+                  transition={{ duration: 1.1, delay: 0.15 + i * 0.06, ease: 'easeOut' }}
+                >
+                  {icon}
+                </motion.span>
+              ))}
             </div>
             <div className="flex flex-col gap-1">
               <h1 className="text-3xl font-extrabold tracking-tight text-apple-text">Welcome, {name}</h1>

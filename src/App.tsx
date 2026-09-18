@@ -1,8 +1,11 @@
-import { lazy, Suspense, type ReactNode } from 'react'
+import { lazy, Suspense, useState, type ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Onboarding from './pages/Onboarding'
 import InstallPrompt from './components/ui/InstallPrompt'
+import WelcomeSplash from './components/splash/WelcomeSplash'
 import { useAppStore } from './lib/store'
+
+const SPLASH_SESSION_KEY = 'settle-madro-splash-shown'
 
 const Groups = lazy(() => import('./pages/Groups'))
 const Group = lazy(() => import('./pages/Group'))
@@ -25,6 +28,28 @@ function RequireOnboarding({ children }: { children: ReactNode }) {
 
 export default function App() {
   const onboarded = useAppStore((state) => state.onboarded)
+  const [showSplash, setShowSplash] = useState(() => {
+    try {
+      return !sessionStorage.getItem(SPLASH_SESSION_KEY)
+    } catch {
+      return true
+    }
+  })
+
+  if (showSplash) {
+    return (
+      <WelcomeSplash
+        onFinish={() => {
+          try {
+            sessionStorage.setItem(SPLASH_SESSION_KEY, '1')
+          } catch {
+            // Private browsing / storage disabled — splash will just replay next open
+          }
+          setShowSplash(false)
+        }}
+      />
+    )
+  }
 
   return (
     <>
