@@ -5,13 +5,15 @@ import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import TextInput from '../components/ui/TextInput'
 import OfflineBanner from '../components/ui/OfflineBanner'
+import Modal from '../components/ui/Modal'
+import AppMenu from '../components/ui/AppMenu'
 import CharacterAvatar from '../components/characters/CharacterAvatar'
 import { useAppStore } from '../lib/store'
 import { useAnonymousAuth } from '../lib/useAnonymousAuth'
 import { createGroup, joinGroupByCode, subscribeToUserGroups, type Group } from '../lib/groups'
 import { useProfiles } from '../lib/useProfiles'
 
-type Modal = 'none' | 'create' | 'join'
+type ModalState = 'none' | 'create' | 'join'
 
 export default function Groups() {
   const navigate = useNavigate()
@@ -19,7 +21,7 @@ export default function Groups() {
   const { user: authUser, error: authError } = useAnonymousAuth()
 
   const [groups, setGroups] = useState<Group[]>([])
-  const [modal, setModal] = useState<Modal>('none')
+  const [modal, setModal] = useState<ModalState>('none')
   const [inputValue, setInputValue] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -52,12 +54,19 @@ export default function Groups() {
 
   const handleJoin = async () => {
     if (!authUser || !inputValue.trim()) return
+
+    const code = inputValue.trim()
+    if (!/^\d{6}$/.test(code)) {
+      setError('Invite codes are 6 digits — double-check the code.')
+      return
+    }
+
     setBusy(true)
     setError(null)
     try {
-      const groupId = await joinGroupByCode(inputValue.trim(), authUser.uid)
+      const { groupId, duplicateNames } = await joinGroupByCode(code, authUser.uid)
       closeModal()
-      navigate(`/groups/${groupId}`)
+      navigate(`/groups/${groupId}`, { state: { duplicateNames } })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
@@ -66,11 +75,13 @@ export default function Groups() {
   }
 
   return (
-    <div className="safe-top safe-bottom safe-x flex flex-1 flex-col gap-6 px-6 py-6 bg-apple-bg min-h-screen">
-      <div className="flex items-center justify-between mt-2">
-        <div className="flex flex-col gap-0.5">
+    <div className="safe-top safe-bottom safe-x relative flex min-h-screen flex-1 flex-col gap-6 bg-apple-bg px-5 py-6 sm:px-6">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-72 bg-[radial-gradient(circle_at_50%_0%,rgba(10,132,255,0.12),transparent_60%)]" />
+
+      <div className="relative z-20 mt-2 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-0.5">
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-extrabold tracking-tight text-apple-text">Groups</h1>
+            <h1 className="text-2xl font-extrabold tracking-tight text-apple-text sm:text-3xl">Groups</h1>
             <motion.span
               className="text-xl"
               animate={{ rotateY: [0, 180, 360] }}
@@ -79,18 +90,23 @@ export default function Groups() {
               🪙
             </motion.span>
           </div>
-          {user && <p className="text-sm font-medium text-apple-text-secondary">Signed in as {user.name}</p>}
+          {user && (
+            <p className="truncate text-sm font-medium text-apple-text-secondary">Signed in as {user.name}</p>
+          )}
         </div>
-        {user && (
-          <div className="p-0.5 bg-white/5 rounded-full border border-apple-border shadow-apple-smooth">
-            <CharacterAvatar characterId={user.characterId} size={44} />
-          </div>
-        )}
+        <div className="flex shrink-0 items-center gap-2.5">
+          {user && (
+            <div className="rounded-full border border-apple-border bg-white/5 p-0.5 shadow-apple-smooth">
+              <CharacterAvatar characterId={user.characterId} size={44} />
+            </div>
+          )}
+          <AppMenu />
+        </div>
       </div>
 
       {authError && <OfflineBanner message="Offline Cache Mode · Local replication active" />}
 
-      <div className="flex flex-col gap-3.5">
+      <div className="relative z-10 flex flex-col gap-3.5">
         <AnimatePresence>
           {groups.map((group, index) => (
             <motion.div
@@ -107,13 +123,18 @@ export default function Groups() {
         </AnimatePresence>
 
         {groups.length === 0 && (
-          <Card className="text-center bg-white/[0.02] border border-apple-border p-8">
-            <p className="text-sm text-apple-text-secondary font-medium py-2">No active groups. Create or join one to begin.</p>
+          <Card className="flex flex-col items-center gap-3 border border-apple-border bg-white/[0.02] p-8 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-apple-border bg-white/5 text-2xl shadow-apple-smooth">
+              👥
+            </div>
+            <p className="py-1 text-sm font-medium text-apple-text-secondary">
+              No active groups yet. Create one or join with an invite code to begin.
+            </p>
           </Card>
         )}
       </div>
 
-      <div className="mt-auto flex gap-3.5 pt-4">
+      <div className="relative z-10 mt-auto flex gap-3.5 pt-4">
         <Button variant="secondary" className="flex-1 font-semibold text-sm" onClick={() => setModal('join')}>
           Join Group
         </Button>
@@ -122,57 +143,39 @@ export default function Groups() {
         </Button>
       </div>
 
-      <AnimatePresence>
-        {modal !== 'none' && (
+      <Modal open={modal !== 'none'} onClose={closeModal}>
+        <div className="mb-5 flex items-center gap-3">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="safe-x fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm"
-            onClick={closeModal}
+            initial={{ scale: 0.6, opacity: 0, rotate: -10 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 20 }}
+            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-apple-border bg-white/5 text-xl"
           >
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ ease: [0.25, 1, 0.5, 1], duration: 0.35 }}
-              className="safe-bottom w-full max-w-md rounded-t-[24px] bg-[#1c1c1e]/90 border-t border-apple-border p-6 shadow-apple-intense backdrop-blur-[30px]"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-white/10" />
-              <div className="mb-5 flex items-center gap-3">
-                <motion.div
-                  initial={{ scale: 0.6, opacity: 0, rotate: -10 }}
-                  animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                  transition={{ type: 'spring', stiffness: 320, damping: 20 }}
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/5 border border-apple-border text-xl"
-                >
-                  {modal === 'create' ? '🎉' : '🔗'}
-                </motion.div>
-                <h2 className="text-xl font-bold tracking-tight text-apple-text">
-                  {modal === 'create' ? 'New Group' : 'Join Group'}
-                </h2>
-              </div>
-              <TextInput
-                placeholder={modal === 'create' ? 'Group Name' : 'Invite Code'}
-                label={modal === 'create' ? 'Name' : 'Code'}
-                value={inputValue}
-                onChange={(event) => setInputValue(event.target.value)}
-                autoFocus
-              />
-              {error && <p className="mt-2.5 text-xs text-rose-500 font-medium">{error}</p>}
-              <Button
-                variant={modal === 'create' ? 'primary' : 'accent'}
-                className="mt-6 w-full py-4 text-sm font-semibold"
-                disabled={busy || !inputValue.trim()}
-                onClick={modal === 'create' ? handleCreate : handleJoin}
-              >
-                {busy ? 'Processing...' : modal === 'create' ? 'Create' : 'Join'}
-              </Button>
-            </motion.div>
+            {modal === 'create' ? '🎉' : '🔗'}
           </motion.div>
-        )}
-      </AnimatePresence>
+          <h2 className="text-xl font-bold tracking-tight text-apple-text">
+            {modal === 'create' ? 'New Group' : 'Join Group'}
+          </h2>
+        </div>
+        <TextInput
+          placeholder={modal === 'create' ? 'Group Name' : 'Invite Code'}
+          label={modal === 'create' ? 'Name' : 'Code'}
+          value={inputValue}
+          onChange={(event) => setInputValue(event.target.value)}
+          maxLength={modal === 'create' ? 40 : 6}
+          inputMode={modal === 'join' ? 'numeric' : undefined}
+          autoFocus
+        />
+        {error && <p className="mt-2.5 text-xs font-medium text-rose-500">{error}</p>}
+        <Button
+          variant={modal === 'create' ? 'primary' : 'accent'}
+          className="mt-6 w-full py-4 text-sm font-semibold"
+          disabled={busy || !inputValue.trim()}
+          onClick={modal === 'create' ? handleCreate : handleJoin}
+        >
+          {busy ? 'Processing...' : modal === 'create' ? 'Create' : 'Join'}
+        </Button>
+      </Modal>
     </div>
   )
 }

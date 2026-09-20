@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import CharacterAvatar from '../components/characters/CharacterAvatar'
@@ -33,14 +33,26 @@ export default function Onboarding() {
       // Local state fallback
     }
 
-    completeOnboarding({ uid: authUser.uid, name: name.trim(), characterId })
     setStep('welcome')
     setSaving(false)
-    setTimeout(() => navigate('/groups'), 1500)
   }
 
+  // Deferring completeOnboarding() until the welcome animation finishes keeps `onboarded`
+  // false while it plays — flipping it early makes App.tsx's route-level redirect to
+  // /groups fire immediately, skipping the animation and leaving this timer orphaned to
+  // fire later and yank navigation wherever the user has since gone.
+  useEffect(() => {
+    if (step !== 'welcome' || !authUser) return
+    const timer = setTimeout(() => {
+      completeOnboarding({ uid: authUser.uid, name: name.trim(), characterId })
+      navigate('/groups')
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [step, authUser, name, characterId, completeOnboarding, navigate])
+
   return (
-    <div className="safe-top safe-bottom safe-x flex flex-1 flex-col items-center justify-center px-6 bg-apple-bg">
+    <div className="safe-top safe-bottom safe-x relative flex flex-1 flex-col items-center justify-center bg-apple-bg px-6">
+      <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_20%,rgba(10,132,255,0.12),transparent_55%)]" />
       <AnimatePresence mode="wait">
         {step === 'name' && (
           <motion.div
@@ -63,6 +75,7 @@ export default function Onboarding() {
                 placeholder="Name"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
+                maxLength={30}
                 autoFocus
                 className="w-full text-center"
               />

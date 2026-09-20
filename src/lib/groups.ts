@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from './firebase'
 import { localBackend } from './localBackend'
+import { findDuplicateNames } from './users'
 
 export interface Group {
   id: string
@@ -30,6 +31,7 @@ export interface Expense {
   splitBetween: string[]
   splitType: 'equal' | 'custom'
   customSplits?: Record<string, number>
+  emoji?: string
   createdAt: number
 }
 
@@ -69,21 +71,39 @@ export async function createGroup(name: string, ownerUid: string): Promise<strin
   return docRef.id
 }
 
-export async function joinGroupByCode(code: string, uid: string): Promise<string> {
+export interface JoinGroupResult {
+  groupId: string
+  /** Display names of other members that share this joiner's name (case/whitespace-insensitive) */
+  duplicateNames: string[]
+}
+
+export async function joinGroupByCode(code: string, uid: string): Promise<JoinGroupResult> {
+  let groupId: string
+  let existingMemberIds: string[]
+
   if (!isFirebaseConfigured) {
-    return localBackend.joinGroup(code, uid)
+    const result = localBackend.joinGroup(code, uid)
+    groupId = result.groupId
+    existingMemberIds = result.existingMemberIds
+  } else {
+    const groupsRef = collection(db, 'groups')
+    const matches = await getDocs(query(groupsRef, where('inviteCode', '==', code)))
+
+    if (matches.empty) {
+      throw new Error('No group found with that code')
+    }
+
+    const groupDoc = matches.docs[0]
+    existingMemberIds = groupDoc.data().memberIds ?? []
+    await updateDoc(groupDoc.ref, { memberIds: arrayUnion(uid) })
+    groupId = groupDoc.id
   }
 
-  const groupsRef = collection(db, 'groups')
-  const matches = await getDocs(query(groupsRef, where('inviteCode', '==', code)))
-
-  if (matches.empty) {
-    throw new Error('No group found with that code')
-  }
-
-  const groupDoc = matches.docs[0]
-  await updateDoc(groupDoc.ref, { memberIds: arrayUnion(uid) })
-  return groupDoc.id
+  const duplicateNames = await findDuplicateNames(
+    existingMemberIds.filter((memberId) => memberId !== uid),
+    uid,
+  )
+  return { groupId, duplicateNames }
 }
 
 export function subscribeToUserGroups(uid: string, callback: (groups: Group[]) => void) {
@@ -147,6 +167,7 @@ export function subscribeToExpenses(groupId: string, callback: (expenses: Expens
           splitBetween: data.splitBetween ?? [],
           splitType: data.splitType,
           customSplits: data.customSplits,
+          emoji: data.emoji,
           createdAt: data.createdAt?.toMillis?.() ?? 0,
         }
       }),

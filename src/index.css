@@ -36,10 +36,32 @@
     color-scheme: dark;
   }
 
+  :root[data-theme='light'] {
+    color-scheme: light;
+    --color-apple-bg: #f2f2f7;
+    --color-apple-card: rgba(255, 255, 255, 0.72);
+    --color-apple-card-elevated: rgba(255, 255, 255, 0.9);
+    --color-apple-border: rgba(0, 0, 0, 0.08);
+    --color-apple-border-light: rgba(0, 0, 0, 0.14);
+
+    --color-apple-accent: #0a84ff;
+    --color-apple-accent-dim: rgba(10, 132, 255, 0.12);
+    --color-apple-accent-dark: #0066cc;
+
+    --color-apple-text: #0b0b0d;
+    --color-apple-text-secondary: #6e6e73;
+    --color-apple-text-tertiary: #a0a0a6;
+
+    --shadow-apple-smooth: 0 4px 24px rgba(0, 0, 0, 0.08);
+    --shadow-apple-intense: 0 12px 32px rgba(0, 0, 0, 0.14);
+    --shadow-apple-accent-glow: 0 0 20px rgba(10, 132, 255, 0.15);
+  }
+
   html,
   body {
     height: 100%;
     background-color: var(--color-apple-bg);
+    transition: background-color 0.3s ease;
   }
 
   body {

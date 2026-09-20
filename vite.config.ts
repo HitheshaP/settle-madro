@@ -24,8 +24,8 @@ export default defineConfig({
         short_name: 'Settle Madro',
         description:
           'Split expenses with friends — track who owes whom, no payment integration.',
-        theme_color: '#FF6F91',
-        background_color: '#FFF8F3',
+        theme_color: '#09090b',
+        background_color: '#09090b',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
