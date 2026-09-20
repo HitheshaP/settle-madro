@@ -1,7 +1,6 @@
-import { lazy, Suspense, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Onboarding from './pages/Onboarding'
-import InstallPrompt from './components/ui/InstallPrompt'
 import WelcomeSplash from './components/splash/WelcomeSplash'
 import { useAppStore } from './lib/store'
 
@@ -28,6 +27,7 @@ function RequireOnboarding({ children }: { children: ReactNode }) {
 
 export default function App() {
   const onboarded = useAppStore((state) => state.onboarded)
+  const theme = useAppStore((state) => state.theme)
   const [showSplash, setShowSplash] = useState(() => {
     try {
       return !sessionStorage.getItem(SPLASH_SESSION_KEY)
@@ -35,6 +35,10 @@ export default function App() {
       return true
     }
   })
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
 
   if (showSplash) {
     return (
@@ -52,43 +56,40 @@ export default function App() {
   }
 
   return (
-    <>
-      <Routes>
-        <Route path="/" element={onboarded ? <Navigate to="/groups" replace /> : <Onboarding />} />
-        <Route
-          path="/groups"
-          element={
-            <RequireOnboarding>
-              <Groups />
-            </RequireOnboarding>
-          }
-        />
-        <Route
-          path="/groups/:groupId"
-          element={
-            <RequireOnboarding>
-              <Group />
-            </RequireOnboarding>
-          }
-        />
-        <Route
-          path="/groups/:groupId/add-expense"
-          element={
-            <RequireOnboarding>
-              <AddExpense />
-            </RequireOnboarding>
-          }
-        />
-        <Route
-          path="/groups/:groupId/settle-up"
-          element={
-            <RequireOnboarding>
-              <SettleUp />
-            </RequireOnboarding>
-          }
-        />
-      </Routes>
-      <InstallPrompt />
-    </>
+    <Routes>
+      <Route path="/" element={onboarded ? <Navigate to="/groups" replace /> : <Onboarding />} />
+      <Route
+        path="/groups"
+        element={
+          <RequireOnboarding>
+            <Groups />
+          </RequireOnboarding>
+        }
+      />
+      <Route
+        path="/groups/:groupId"
+        element={
+          <RequireOnboarding>
+            <Group />
+          </RequireOnboarding>
+        }
+      />
+      <Route
+        path="/groups/:groupId/add-expense"
+        element={
+          <RequireOnboarding>
+            <AddExpense />
+          </RequireOnboarding>
+        }
+      />
+      <Route
+        path="/groups/:groupId/settle-up"
+        element={
+          <RequireOnboarding>
+            <SettleUp />
+          </RequireOnboarding>
+        }
+      />
+    </Routes>
   )
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
@@ -8,15 +8,21 @@ import CharacterAvatar from '../components/characters/CharacterAvatar'
 import { subscribeToExpenses, subscribeToGroup, type Expense, type Group as GroupData } from '../lib/groups'
 import { useProfiles } from '../lib/useProfiles'
 import { useOnlineStatus } from '../lib/useOnlineStatus'
+import { useAppStore } from '../lib/store'
 
 export default function Group() {
   const { groupId } = useParams<{ groupId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const online = useOnlineStatus()
+  const currentUser = useAppStore((state) => state.user)
 
   const [group, setGroup] = useState<GroupData | null>(null)
   const [expenses, setExpenses] = useState<Expense[]>([])
   const profiles = useProfiles(group?.memberIds ?? [])
+
+  const routeDuplicateNames = (location.state as { duplicateNames?: string[] } | null)?.duplicateNames
+  const [duplicateNames, setDuplicateNames] = useState<string[]>(routeDuplicateNames ?? [])
 
   useEffect(() => {
     if (!groupId) return
@@ -33,6 +39,16 @@ export default function Group() {
   return (
     <div className="safe-top safe-bottom safe-x flex flex-1 flex-col gap-6 px-6 py-6 bg-apple-bg min-h-screen">
       {!online && <OfflineBanner />}
+
+      <AnimatePresence>
+        {duplicateNames.length > 0 && currentUser && (
+          <OfflineBanner
+            icon="👥"
+            message={`${duplicateNames.join(', ')} in this group ${duplicateNames.length === 1 ? 'shares' : 'share'} your name "${currentUser.name}". Consider adding an initial (e.g. "${currentUser.name} K.") or "OG" (e.g. "${currentUser.name} OG") next to your name so expenses are easy to tell apart.`}
+            onDismiss={() => setDuplicateNames([])}
+          />
+        )}
+      </AnimatePresence>
 
       <div className="flex flex-col gap-1.5 mt-2">
         <button 
@@ -98,7 +114,10 @@ export default function Group() {
                     </div>
                   )}
                   <div className="flex flex-col">
-                    <p className="text-sm font-semibold tracking-tight text-apple-text">{expense.description}</p>
+                    <p className="text-sm font-semibold tracking-tight text-apple-text">
+                      {expense.emoji && <span className="mr-1.5">{expense.emoji}</span>}
+                      {expense.description}
+                    </p>
                     <p className="text-[11px] text-apple-text-secondary font-medium mt-0.5">Paid by {profiles[expense.paidBy]?.name ?? '...'}</p>
                   </div>
                 </div>

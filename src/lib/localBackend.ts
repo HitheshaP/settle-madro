@@ -21,6 +21,7 @@ export interface LocalExpense {
   splitBetween: string[]
   splitType: 'equal' | 'custom'
   customSplits?: Record<string, number>
+  emoji?: string
   createdAt: number
 }
 
@@ -102,9 +103,17 @@ export const localBackend = {
     const entry = Object.entries(db.groups).find(([, g]) => g.inviteCode === code)
     if (!entry) throw new Error('No group found with that code')
     const [id, group] = entry
+    const existingMemberIds = [...group.memberIds]
     if (!group.memberIds.includes(uid)) group.memberIds.push(uid)
     save(db)
-    return id
+    return { groupId: id, existingMemberIds }
+  },
+
+  getUsersOnce(uids: string[]) {
+    const db = load()
+    return uids
+      .map((uid) => (db.users[uid] ? { uid, ...db.users[uid] } : null))
+      .filter((u): u is LocalUser & { uid: string } => u !== null)
   },
 
   subscribeUserGroups(uid: string, callback: (groups: ({ id: string } & LocalGroup)[]) => void) {

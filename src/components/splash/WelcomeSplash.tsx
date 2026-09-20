@@ -22,20 +22,20 @@ export default function WelcomeSplash({ onFinish }: WelcomeSplashProps) {
           key="splash"
           exit={{ opacity: 0, scale: 1.04 }}
           transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
-          className="fixed inset-0 z-[100] overflow-hidden bg-apple-bg safe-top safe-bottom safe-x"
+          className="fixed inset-0 z-[100] overflow-hidden bg-apple-bg"
           onClick={() => setVisible(false)}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,rgba(10,132,255,0.14),transparent_55%)]" />
 
-          <MoneyPassScene className="absolute left-[3%] top-[9%]" />
-          <UpiScene className="absolute right-[3%] top-[7%]" />
-          <BarterScene className="absolute left-[2%] bottom-[16%]" />
-          <TreasureScene className="absolute right-[4%] bottom-[13%]" />
+          {/* soft vignette behind the center text only — sits below the corner scenes so it never washes them out */}
+          <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_54%,rgba(9,9,11,0)_0%,rgba(9,9,11,0.3)_42%,rgba(9,9,11,0.55)_100%)]" />
 
-          {/* vignette so center text stays crisp against the busy corners */}
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_54%,rgba(9,9,11,0)_0%,rgba(9,9,11,0.55)_38%,rgba(9,9,11,0.92)_68%)]" />
+          <MoneyPassScene className="absolute left-[4%] top-[10%] z-10 scale-[0.85] sm:scale-100" />
+          <UpiScene className="absolute right-[4%] top-[8%] z-10 scale-[0.85] sm:scale-100" />
+          <BarterScene className="absolute left-[3%] bottom-[17%] z-10 scale-[0.85] sm:scale-100" />
+          <TreasureScene className="absolute right-[5%] bottom-[14%] z-10 scale-[0.85] sm:scale-100" />
 
-          <div className="relative z-10 flex h-full flex-col items-center justify-center gap-5 px-6 text-center">
+          <div className="safe-top safe-bottom safe-x relative z-20 flex h-full w-full flex-col items-center justify-center gap-5 px-6 text-center">
             <motion.div
               initial={{ scale: 0.3, opacity: 0, rotate: -25 }}
               animate={{ scale: 1, opacity: 1, rotate: 0 }}
@@ -105,31 +105,47 @@ function TextLine({ text, delayBase, className }: { text: string; delayBase: num
   )
 }
 
-function MoneyPassScene({ className = '' }: { className?: string }) {
+function SceneGlow({ color }: { color: string }) {
   return (
-    <div className={`${className} opacity-70`}>
-      <div className="relative flex h-20 w-28 items-center justify-between">
-        <motion.span
-          className="text-2xl"
-          animate={{ y: [0, -4, 0] }}
-          transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          🧑‍💼
-        </motion.span>
-        <motion.span
-          className="text-2xl"
-          animate={{ y: [0, -4, 0] }}
-          transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
-        >
-          🧑‍🎨
-        </motion.span>
-        <motion.span
-          className="absolute left-6 top-4 text-lg"
-          animate={{ x: [0, 42, 0], opacity: [0, 1, 1, 0] }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          🪙
-        </motion.span>
+    <div
+      className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-2xl"
+      style={{ background: `radial-gradient(circle, ${color}66, transparent 70%)` }}
+    />
+  )
+}
+
+function MoneyPassScene({ className = '' }: { className?: string }) {
+  const glow = '0 0 10px #fbbf24cc'
+  return (
+    <div className={className}>
+      <div className="relative">
+        <SceneGlow color="#fbbf24" />
+        <div className="relative flex h-20 w-28 items-center justify-between">
+          <motion.span
+            className="text-2xl"
+            style={{ filter: `drop-shadow(${glow})` }}
+            animate={{ y: [0, -4, 0] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            🧑‍💼
+          </motion.span>
+          <motion.span
+            className="text-2xl"
+            style={{ filter: `drop-shadow(${glow})` }}
+            animate={{ y: [0, -4, 0] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+          >
+            🧑‍🎨
+          </motion.span>
+          <motion.span
+            className="absolute left-6 top-4 text-lg"
+            style={{ filter: `drop-shadow(${glow})` }}
+            animate={{ x: [0, 42, 0], opacity: [0, 1, 1, 0] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            🪙
+          </motion.span>
+        </div>
       </div>
     </div>
   )
@@ -137,24 +153,31 @@ function MoneyPassScene({ className = '' }: { className?: string }) {
 
 function UpiScene({ className = '' }: { className?: string }) {
   return (
-    <div className={`${className} opacity-70`}>
-      <div className="flex flex-col items-center gap-1.5">
-        <div className="relative flex h-16 w-11 items-center justify-center overflow-hidden rounded-xl border border-apple-border bg-white/5">
-          <span className="text-xl leading-none">🔲</span>
-          <motion.div
-            className="absolute inset-x-1 h-0.5 rounded-full"
-            style={{ background: '#0a84ff', boxShadow: '0 0 8px #0a84ff' }}
-            animate={{ top: ['10%', '82%', '10%'] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-          />
+    <div className={className}>
+      <div className="relative">
+        <SceneGlow color="#0a84ff" />
+        <div className="flex flex-col items-center gap-1.5">
+          <div
+            className="relative flex h-16 w-11 items-center justify-center overflow-hidden rounded-xl border bg-white/[0.07]"
+            style={{ borderColor: 'rgba(10,132,255,0.5)', boxShadow: '0 0 16px rgba(10,132,255,0.35)' }}
+          >
+            <span className="text-xl leading-none">🔲</span>
+            <motion.div
+              className="absolute inset-x-1 h-0.5 rounded-full"
+              style={{ background: '#0a84ff', boxShadow: '0 0 8px #0a84ff' }}
+              animate={{ top: ['10%', '82%', '10%'] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </div>
+          <motion.span
+            className="text-[9px] font-bold tracking-widest"
+            style={{ color: '#5ab3ff' }}
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.8, repeat: Infinity }}
+          >
+            SCAN & PAY
+          </motion.span>
         </div>
-        <motion.span
-          className="text-[9px] font-bold tracking-widest text-apple-text-secondary"
-          animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.8, repeat: Infinity }}
-        >
-          SCAN & PAY
-        </motion.span>
       </div>
     </div>
   )
@@ -162,43 +185,56 @@ function UpiScene({ className = '' }: { className?: string }) {
 
 function BarterScene({ className = '' }: { className?: string }) {
   return (
-    <div className={`${className} opacity-70`}>
-      <div className="relative flex h-16 w-24 items-center justify-between">
-        <motion.span
-          className="text-2xl"
-          animate={{ x: [0, 46, 0] }}
-          transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          🌾
-        </motion.span>
-        <motion.span
-          className="text-2xl"
-          animate={{ x: [0, -46, 0] }}
-          transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          🧺
-        </motion.span>
+    <div className={className}>
+      <div className="relative">
+        <SceneGlow color="#34d399" />
+        <div className="relative flex h-16 w-24 items-center justify-between">
+          <motion.span
+            className="text-2xl"
+            style={{ filter: 'drop-shadow(0 0 10px #34d399cc)' }}
+            animate={{ x: [0, 46, 0] }}
+            transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            🌾
+          </motion.span>
+          <motion.span
+            className="text-2xl"
+            style={{ filter: 'drop-shadow(0 0 10px #f59e0bcc)' }}
+            animate={{ x: [0, -46, 0] }}
+            transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            🧺
+          </motion.span>
+        </div>
       </div>
     </div>
   )
 }
 
 function TreasureScene({ className = '' }: { className?: string }) {
-  const items = ['💰', '💎', '🪙']
+  const items = [
+    { icon: '💰', glow: '#fbbf24' },
+    { icon: '💎', glow: '#22d3ee' },
+    { icon: '🪙', glow: '#facc15' },
+  ]
   return (
-    <div className={`${className} opacity-70`}>
-      <div className="relative h-24 w-16">
-        {items.map((item, i) => (
-          <motion.span
-            key={item}
-            className="absolute bottom-0 left-1/2 text-xl -translate-x-1/2"
-            initial={{ y: 0, opacity: 0, rotate: 0 }}
-            animate={{ y: [-4, -64], opacity: [0, 1, 1, 0], rotate: [0, i % 2 ? 16 : -16] }}
-            transition={{ duration: 2.6, repeat: Infinity, delay: i * 0.6, ease: 'easeOut' }}
-          >
-            {item}
-          </motion.span>
-        ))}
+    <div className={className}>
+      <div className="relative">
+        <SceneGlow color="#a78bfa" />
+        <div className="relative h-24 w-16">
+          {items.map((item, i) => (
+            <motion.span
+              key={item.icon}
+              className="absolute bottom-0 left-1/2 text-xl -translate-x-1/2"
+              style={{ filter: `drop-shadow(0 0 10px ${item.glow}cc)` }}
+              initial={{ y: 0, opacity: 0, rotate: 0 }}
+              animate={{ y: [-4, -64], opacity: [0, 1, 1, 0], rotate: [0, i % 2 ? 16 : -16] }}
+              transition={{ duration: 2.6, repeat: Infinity, delay: i * 0.6, ease: 'easeOut' }}
+            >
+              {item.icon}
+            </motion.span>
+          ))}
+        </div>
       </div>
     </div>
   )
