@@ -48,6 +48,12 @@ const CARDS: CharacterOption[] = [
   { id: 'goat', name: 'G.O.A.T', glow: '#c7c7cc' },
 ]
 
+const LOGOS: CharacterOption[] = [
+  { id: 'logo-batman', name: 'Batman', glow: '#facc15' },
+  { id: 'logo-spiderman', name: 'Spider-Man', glow: '#dc2626' },
+  { id: 'logo-captain', name: 'Captain America', glow: '#60a5fa' },
+]
+
 // Interleaved round-robin across every group so the picker shows one mixed grid
 // instead of separate people/flower/animal/card sections.
 function interleave(...groups: CharacterOption[][]): CharacterOption[] {
@@ -61,7 +67,7 @@ function interleave(...groups: CharacterOption[][]): CharacterOption[] {
   return merged
 }
 
-export const CHARACTERS: CharacterOption[] = interleave(GUYS, FLOWERS, ANIMALS, GIRLS, CARDS)
+export const CHARACTERS: CharacterOption[] = interleave(GUYS, FLOWERS, ANIMALS, GIRLS, CARDS, LOGOS)
 
 export function getCharacter(characterId: string) {
   return CHARACTERS.find((c) => c.id === characterId) ?? CHARACTERS[0]

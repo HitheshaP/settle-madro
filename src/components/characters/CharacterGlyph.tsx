@@ -72,7 +72,6 @@ function GuyHandsome() {
       <Head skin="#f3c9a0" />
       <path d="M24 34 Q23 15 50 15 Q77 15 76 34 Q66 20 50 22 Q34 20 24 34 Z" fill="#5b3a29" stroke={INK} strokeWidth="2.5" />
       <Face blush="#f9a8d4" />
-      <path d="M40 62 Q50 58 60 62" stroke="#c68642" strokeWidth="1.6" fill="none" opacity="0.5" />
     </>
   )
 }
@@ -474,7 +473,6 @@ function CardKing() {
       <circle cx="74" cy="14" r="3" fill="#f43f5e" />
       <path d="M30 20 Q50 12 70 20" stroke="#7f1d1d" strokeWidth="2" fill="none" />
       <Face />
-      <path d="M32 62 Q50 56 68 62" stroke="#f8fafc" strokeWidth="2.4" fill="none" />
     </>
   )
 }
@@ -557,6 +555,56 @@ function Goat() {
   )
 }
 
+// ---------- superhero logos ----------
+
+function LogoBatman() {
+  return (
+    <>
+      <rect x="3" y="3" width="94" height="94" rx="20" fill="#0a0a0a" stroke={INK} strokeWidth="2" />
+      <ellipse cx="50" cy="52" rx="38" ry="24" fill="#facc15" />
+      <path
+        d="M50 34 L58 20 L62 34 L80 24 L72 40 L96 46 L76 50 L88 66 L66 55 L58 76 L50 62 L42 76 L34 55 L12 66 L24 50 L4 46 L28 40 L20 24 L38 34 Z"
+        fill="#0a0a0a"
+      />
+    </>
+  )
+}
+
+function LogoSpiderman() {
+  return (
+    <>
+      <circle cx="50" cy="50" r="47" fill="#dc2626" stroke={INK} strokeWidth="2" />
+      <g stroke="#0a0a0a" strokeWidth="4" strokeLinecap="round" fill="none">
+        <path d="M50 45 L20 20" />
+        <path d="M50 48 L14 38" />
+        <path d="M50 52 L14 62" />
+        <path d="M50 55 L20 80" />
+        <path d="M50 45 L80 20" />
+        <path d="M50 48 L86 38" />
+        <path d="M50 52 L86 62" />
+        <path d="M50 55 L80 80" />
+      </g>
+      <ellipse cx="50" cy="58" rx="10" ry="16" fill="#0a0a0a" />
+      <circle cx="50" cy="38" r="7" fill="#0a0a0a" />
+    </>
+  )
+}
+
+function LogoCaptain() {
+  return (
+    <>
+      <circle cx="50" cy="50" r="47" fill="#b91c1c" stroke={INK} strokeWidth="2" />
+      <circle cx="50" cy="50" r="37" fill="#f8fafc" />
+      <circle cx="50" cy="50" r="27" fill="#b91c1c" />
+      <circle cx="50" cy="50" r="17" fill="#1d4ed8" stroke={INK} strokeWidth="1.5" />
+      <path
+        d="M50,41 L52.1,47.1 L58.6,47.2 L53.4,51.1 L55.3,57.3 L50,53.6 L44.7,57.3 L46.6,51.1 L41.4,47.2 L47.9,47.1 Z"
+        fill="#f8fafc"
+      />
+    </>
+  )
+}
+
 const RENDERERS: Record<string, () => React.ReactElement> = {
   'guy-nerdy': GuyNerdy,
   'guy-rich': GuyRich,
@@ -587,6 +635,9 @@ const RENDERERS: Record<string, () => React.ReactElement> = {
   'card-joker': CardJoker,
   'card-ace': CardAce,
   goat: Goat,
+  'logo-batman': LogoBatman,
+  'logo-spiderman': LogoSpiderman,
+  'logo-captain': LogoCaptain,
 }
 
 export default function CharacterGlyph({ id, size }: GlyphProps) {
