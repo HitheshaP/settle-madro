@@ -13,9 +13,12 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID ?? 'PLACEHOLDER_APP_ID',
 }
 
+const hasNonPlaceholderValue = (value: string | undefined) =>
+  Boolean(value && value.trim() && !value.includes('PLACEHOLDER_') && !value.includes('PLACEHOLDER.'))
+
 // Until real config is provided, the app runs against src/lib/localBackend.ts instead
 // (see groups.ts / users.ts) so the full flow is still usable without a Firebase project.
-export const isFirebaseConfigured = firebaseConfig.apiKey !== 'PLACEHOLDER_API_KEY'
+export const isFirebaseConfigured = Object.values(firebaseConfig).every(hasNonPlaceholderValue)
 
 export const firebaseApp = initializeApp(firebaseConfig)
 export const auth = getAuth(firebaseApp)

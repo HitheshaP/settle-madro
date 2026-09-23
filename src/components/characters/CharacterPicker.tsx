@@ -9,7 +9,7 @@ interface CharacterPickerProps {
 
 export default function CharacterPicker({ value, onChange }: CharacterPickerProps) {
   return (
-    <div className="grid max-h-80 grid-cols-4 gap-x-3 gap-y-4 overflow-y-auto py-1">
+    <div className="grid max-h-[18rem] w-full grid-cols-4 gap-x-2 gap-y-3 overflow-y-auto py-1 pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       {CHARACTERS.map((character, index) => (
         <motion.div
           key={character.id}
@@ -20,7 +20,7 @@ export default function CharacterPicker({ value, onChange }: CharacterPickerProp
         >
           <CharacterAvatar
             characterId={character.id}
-            size={62}
+            size={52}
             shape="square"
             selected={character.id === value}
             onClick={() => onChange(character.id)}
