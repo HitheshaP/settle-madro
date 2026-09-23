@@ -75,7 +75,7 @@ export default function Groups() {
   }
 
   return (
-    <div className="safe-top safe-bottom safe-x relative flex min-h-screen flex-1 flex-col gap-6 bg-apple-bg px-5 py-6 sm:px-6">
+    <div className="safe-top safe-bottom safe-x relative flex min-h-screen flex-1 flex-col gap-4 bg-apple-bg px-5 py-6 sm:px-6">
       <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-72 bg-[radial-gradient(circle_at_50%_0%,rgba(10,132,255,0.12),transparent_60%)]" />
 
       <div className="relative z-20 mt-2 flex items-center justify-between gap-3">
@@ -106,41 +106,43 @@ export default function Groups() {
 
       {authError && <OfflineBanner message="Offline Cache Mode · Local replication active" />}
 
-      <div className="relative z-10 flex flex-col gap-3.5">
-        <AnimatePresence>
-          {groups.map((group, index) => (
-            <motion.div
-              key={group.id}
-              layout
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ delay: index * 0.04, ease: [0.25, 1, 0.5, 1], duration: 0.3 }}
-            >
-              <GroupCard group={group} onOpen={() => navigate(`/groups/${group.id}`)} />
-            </motion.div>
-          ))}
-        </AnimatePresence>
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col gap-3.5 overflow-hidden">
+        <div className="flex-1 overflow-y-auto pr-0.5">
+          <AnimatePresence>
+            {groups.map((group, index) => (
+              <motion.div
+                key={group.id}
+                layout
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ delay: index * 0.04, ease: [0.25, 1, 0.5, 1], duration: 0.3 }}
+              >
+                <GroupCard group={group} onOpen={() => navigate(`/groups/${group.id}`)} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
 
-        {groups.length === 0 && (
-          <Card className="flex flex-col items-center gap-3 border border-apple-border bg-white/[0.02] p-8 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-apple-border bg-white/5 text-2xl shadow-apple-smooth">
-              👥
-            </div>
-            <p className="py-1 text-sm font-medium text-apple-text-secondary">
-              No active groups yet. Create one or join with an invite code to begin.
-            </p>
-          </Card>
-        )}
-      </div>
+          {groups.length === 0 && (
+            <Card className="flex flex-col items-center gap-3 border border-apple-border bg-white/[0.02] p-8 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-apple-border bg-white/5 text-2xl shadow-apple-smooth">
+                👥
+              </div>
+              <p className="py-1 text-sm font-medium text-apple-text-secondary">
+                No active groups yet. Create one or join with an invite code to begin.
+              </p>
+            </Card>
+          )}
+        </div>
 
-      <div className="relative z-10 mt-auto flex gap-3.5 pt-4">
-        <Button variant="secondary" className="flex-1 font-semibold text-sm" onClick={() => setModal('join')}>
-          Join Group
-        </Button>
-        <Button variant="primary" className="flex-1 font-semibold text-sm" onClick={() => setModal('create')}>
-          Create Group
-        </Button>
+        <div className="relative z-10 sticky bottom-0 flex gap-3.5 border-t border-apple-border bg-apple-bg/90 pt-4 backdrop-blur-sm">
+          <Button variant="secondary" className="flex-1 font-semibold text-sm" onClick={() => setModal('join')}>
+            Join Group
+          </Button>
+          <Button variant="primary" className="flex-1 font-semibold text-sm" onClick={() => setModal('create')}>
+            Create Group
+          </Button>
+        </div>
       </div>
 
       <Modal open={modal !== 'none'} onClose={closeModal}>

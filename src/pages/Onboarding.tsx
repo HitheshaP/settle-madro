@@ -100,25 +100,32 @@ export default function Onboarding() {
             transition={{ ease: [0.25, 1, 0.5, 1], duration: 0.4 }}
             className="flex w-full max-w-md flex-col items-center"
           >
-            <Card className="flex w-full flex-col items-center gap-5 text-center border border-apple-border shadow-apple-intense">
-              <div className="flex flex-col gap-1.5">
+            <Card className="flex w-full max-h-[80vh] flex-col items-center gap-4 overflow-hidden border border-apple-border text-center shadow-apple-intense">
+              <div className="flex w-full flex-col gap-1.5 px-1 pt-1">
                 <h1 className="text-2xl font-bold tracking-tight text-apple-text">Choose Your Character</h1>
                 <p className="text-sm text-apple-text-secondary">Pick who represents you in every transaction</p>
               </div>
-              <CharacterPicker value={characterId} onChange={setCharacterId} />
+
+              <div className="w-full overflow-y-auto px-1 pb-2">
+                <CharacterPicker value={characterId} onChange={setCharacterId} />
+              </div>
+
               {authError && (
-                <p className="text-xs text-rose-500 font-medium">
+                <p className="px-1 text-xs font-medium text-rose-500">
                   Authentication issue. Check network or Firebase setup.
                 </p>
               )}
-              <Button 
-                variant="accent" 
-                className="w-full text-base py-4 font-semibold" 
-                disabled={saving || authLoading || !authUser} 
-                onClick={handleFinish}
-              >
-                {authLoading ? 'Connecting...' : saving ? 'Creating profile...' : 'Get Started'}
-              </Button>
+
+              <div className="w-full border-t border-apple-border bg-apple-bg/90 px-1 pb-1 pt-3 backdrop-blur-sm">
+                <Button
+                  variant="accent"
+                  className="w-full text-base py-4 font-semibold"
+                  disabled={saving || authLoading || !authUser}
+                  onClick={handleFinish}
+                >
+                  {authLoading ? 'Connecting...' : saving ? 'Creating profile...' : 'Get Started'}
+                </Button>
+              </div>
             </Card>
           </motion.div>
         )}
