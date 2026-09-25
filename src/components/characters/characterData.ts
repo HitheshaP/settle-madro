@@ -69,6 +69,20 @@ function interleave(...groups: CharacterOption[][]): CharacterOption[] {
 
 export const CHARACTERS: CharacterOption[] = interleave(GUYS, FLOWERS, ANIMALS, GIRLS, CARDS, LOGOS)
 
+// The Fantastic 6 crew. Not offered in the normal picker — only used inside the Fantastic 6 group.
+export const F6_CHARACTERS: CharacterOption[] = [
+  { id: 'f6-ajji', name: 'Ajji', glow: '#f472b6' },
+  { id: 'f6-pk', name: 'PK', glow: '#a78bfa' },
+  { id: 'f6-goat', name: 'G.O.A.T', glow: '#facc15' },
+  { id: 'f6-ma', name: 'MA', glow: '#22d3ee' },
+  { id: 'f6-dandan', name: 'Dandan', glow: '#34d399' },
+  { id: 'f6-bro', name: 'Bro', glow: '#f97316' },
+]
+
 export function getCharacter(characterId: string) {
-  return CHARACTERS.find((c) => c.id === characterId) ?? CHARACTERS[0]
+  return (
+    CHARACTERS.find((c) => c.id === characterId) ??
+    F6_CHARACTERS.find((c) => c.id === characterId) ??
+    CHARACTERS[0]
+  )
 }

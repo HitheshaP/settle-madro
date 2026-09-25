@@ -11,6 +11,7 @@ export interface LocalGroup {
   name: string
   inviteCode: string
   memberIds: string[]
+  kind?: 'fantastic6'
   createdAt: number
 }
 
@@ -109,6 +110,21 @@ export const localBackend = {
     return { groupId: id, existingMemberIds }
   },
 
+  joinOrCreateGroup(code: string, uid: string, init: { name: string; kind?: LocalGroup['kind'] }) {
+    const db = load()
+    const entry = Object.entries(db.groups).find(([, g]) => g.inviteCode === code)
+    if (entry) {
+      const [id, group] = entry
+      if (!group.memberIds.includes(uid)) group.memberIds.push(uid)
+      save(db)
+      return id
+    }
+    const id = randomId('group')
+    db.groups[id] = { ...init, inviteCode: code, memberIds: [uid], createdAt: Date.now() }
+    save(db)
+    return id
+  },
+
   getUsersOnce(uids: string[]) {
     const db = load()
     return uids
@@ -143,6 +159,14 @@ export const localBackend = {
     const db = load()
     if (!db.expenses[groupId]) db.expenses[groupId] = {}
     db.expenses[groupId][randomId('expense')] = { ...expense, createdAt: Date.now() }
+    save(db)
+  },
+
+  updateExpense(groupId: string, expenseId: string, expense: Omit<LocalExpense, 'createdAt'>) {
+    const db = load()
+    const existing = db.expenses[groupId]?.[expenseId]
+    if (!existing) throw new Error('Expense not found')
+    db.expenses[groupId][expenseId] = { ...expense, createdAt: existing.createdAt }
     save(db)
   },
 

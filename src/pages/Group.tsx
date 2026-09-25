@@ -5,7 +5,16 @@ import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import OfflineBanner from '../components/ui/OfflineBanner'
 import CharacterAvatar from '../components/characters/CharacterAvatar'
-import { subscribeToExpenses, subscribeToGroup, type Expense, type Group as GroupData } from '../lib/groups'
+import Fantastic6Gate from '../components/fantastic6/Fantastic6Gate'
+import {
+  groupParticipants,
+  isFantastic6Group,
+  subscribeToExpenses,
+  subscribeToGroup,
+  type Expense,
+  type Group as GroupData,
+} from '../lib/groups'
+import { fantastic6Profile } from '../lib/fantastic6'
 import { useProfiles } from '../lib/useProfiles'
 import { useOnlineStatus } from '../lib/useOnlineStatus'
 import { useAppStore } from '../lib/store'
@@ -19,7 +28,11 @@ export default function Group() {
 
   const [group, setGroup] = useState<GroupData | null>(null)
   const [expenses, setExpenses] = useState<Expense[]>([])
-  const profiles = useProfiles(group?.memberIds ?? [])
+  const participants = group ? groupParticipants(group) : []
+  const profiles = useProfiles(participants)
+  const f6 = isFantastic6Group(group)
+  const myCrewId = useAppStore((state) => state.fantastic6?.me)
+  const [pickOpen, setPickOpen] = useState(false)
 
   const routeDuplicateNames = (location.state as { duplicateNames?: string[] } | null)?.duplicateNames
   const [duplicateNames, setDuplicateNames] = useState<string[]>(routeDuplicateNames ?? [])
@@ -57,8 +70,24 @@ export default function Group() {
         >
           <span className="text-base">‹</span> Groups
         </button>
-        <h1 className="text-3xl font-extrabold tracking-tight text-apple-text">{group?.name ?? 'Loading...'}</h1>
-        {group && (
+        <h1 className="text-3xl font-extrabold tracking-tight text-apple-text">
+          {f6 ? (
+            <span className="bg-[linear-gradient(90deg,#fff,#ffd6f5,#fff3b0,#b8f2ff)] bg-clip-text text-transparent">
+              Fantastic 6 ✨
+            </span>
+          ) : (
+            (group?.name ?? 'Loading...')
+          )}
+        </h1>
+        {f6 ? (
+          <p className="text-xs font-medium tracking-wide text-apple-text-secondary">
+            You're <span className="font-bold text-apple-text">{myCrewId ? fantastic6Profile(myCrewId).name : '...'}</span>
+            {' · '}
+            <button onClick={() => setPickOpen(true)} className="font-semibold text-apple-accent">
+              change
+            </button>
+          </p>
+        ) : group && (
           <p className="text-xs text-apple-text-secondary font-medium tracking-wide">
             INVITE CODE: <span className="text-apple-text select-all font-mono font-bold">{group.inviteCode}</span>
           </p>
@@ -67,7 +96,7 @@ export default function Group() {
 
       {group && (
         <div className="flex -space-x-2 mt-1">
-          {group.memberIds.map((uid) =>
+          {participants.map((uid) =>
             profiles[uid] ? (
               <div key={uid} className="p-0.5 bg-[#1c1c1e] rounded-full border border-apple-border shadow-sm">
                 <CharacterAvatar key={uid} characterId={profiles[uid].characterId} size={36} />
@@ -98,6 +127,9 @@ export default function Group() {
 
       <div className="flex flex-col gap-3.5">
         <h2 className="text-xs font-bold tracking-widest text-apple-text-secondary uppercase pl-1">Recent Transactions</h2>
+        {expenses.length > 0 && (
+          <p className="-mt-2 pl-1 text-[11px] font-medium text-apple-text-secondary">Tap an expense to edit it.</p>
+        )}
         <AnimatePresence>
           {expenses.map((expense, index) => (
             <motion.div
@@ -106,7 +138,11 @@ export default function Group() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.04, ease: [0.25, 1, 0.5, 1], duration: 0.3 }}
             >
-              <Card className="flex items-center justify-between bg-white/[0.02] border border-apple-border hover:bg-white/[0.04] transition-colors duration-200">
+              <Card
+                onClick={() => navigate(`/groups/${groupId}/expenses/${expense.id}/edit`)}
+                whileTap={{ scale: 0.98 }}
+                className="flex cursor-pointer items-center justify-between bg-white/[0.02] border border-apple-border hover:bg-white/[0.04] transition-colors duration-200"
+              >
                 <div className="flex items-center gap-3.5">
                   {profiles[expense.paidBy] && (
                     <div className="p-0.5 bg-[#1c1c1e] rounded-full border border-apple-border shadow-sm">
@@ -123,6 +159,7 @@ export default function Group() {
                 </div>
                 <div className="text-right">
                   <p className="text-base font-bold tracking-tight text-apple-text">₹{expense.amount.toFixed(0)}</p>
+                  <p className="text-[10px] font-semibold text-apple-accent mt-0.5">Edit ›</p>
                 </div>
               </Card>
             </motion.div>
@@ -135,6 +172,8 @@ export default function Group() {
           </Card>
         )}
       </div>
+
+      {f6 && <Fantastic6Gate open={pickOpen} onClose={() => setPickOpen(false)} mode="pick" groupId={groupId} />}
     </div>
   )
 }

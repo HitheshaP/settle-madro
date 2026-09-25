@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
@@ -16,46 +16,55 @@ function isInStandaloneMode() {
   )
 }
 
+// The browser fires `beforeinstallprompt` once, early — usually before the (lazy-loaded) menu
+// mounts. Capture it at module load (imported from main.tsx) so it's never missed.
+let deferredPrompt: BeforeInstallPromptEvent | null = null
+let installed = isInStandaloneMode()
+const listeners = new Set<() => void>()
+const notify = () => listeners.forEach((listener) => listener())
+
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault()
+  deferredPrompt = event as BeforeInstallPromptEvent
+  notify()
+})
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null
+  installed = true
+  notify()
+})
+
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+
 export function useInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [showIosInstructions, setShowIosInstructions] = useState(false)
-  const [standalone, setStandalone] = useState(() => isInStandaloneMode())
-
-  useEffect(() => {
-    const handler = (event: Event) => {
-      event.preventDefault()
-      setDeferredPrompt(event as BeforeInstallPromptEvent)
-    }
-    const onInstalled = () => {
-      setDeferredPrompt(null)
-      setStandalone(true)
-    }
-    window.addEventListener('beforeinstallprompt', handler)
-    window.addEventListener('appinstalled', onInstalled)
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handler)
-      window.removeEventListener('appinstalled', onInstalled)
-    }
-  }, [])
-
-  const canInstall = !standalone && (Boolean(deferredPrompt) || isIos())
+  const prompt = useSyncExternalStore(subscribe, () => deferredPrompt)
+  const standalone = useSyncExternalStore(subscribe, () => installed)
+  const [showInstructions, setShowInstructions] = useState(false)
 
   const promptInstall = async () => {
-    if (deferredPrompt) {
-      await deferredPrompt.prompt()
-      const choice = await deferredPrompt.userChoice
-      if (choice.outcome === 'accepted') setDeferredPrompt(null)
+    if (prompt) {
+      await prompt.prompt()
+      const choice = await prompt.userChoice
+      if (choice.outcome === 'accepted') {
+        deferredPrompt = null
+        notify()
+      }
       return
     }
-    if (isIos()) setShowIosInstructions(true)
+    // No native prompt available (iOS Safari, Firefox, or Chrome hasn't offered one yet) —
+    // show manual steps instead of leaving a dead button.
+    setShowInstructions(true)
   }
 
   return {
-    canInstall,
     isIos: isIos(),
     isStandalone: standalone,
     promptInstall,
-    showIosInstructions,
-    setShowIosInstructions,
+    showInstructions,
+    setShowInstructions,
   }
 }
