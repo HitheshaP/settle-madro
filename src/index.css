@@ -57,11 +57,58 @@
     --shadow-apple-accent-glow: 0 0 20px rgba(10, 132, 255, 0.15);
   }
 
+  /* Fantastic 6 colourful mode — wins over both dark and light themes */
+  :root[data-f6='on'] {
+    color-scheme: dark;
+    --color-apple-bg: rgba(24, 6, 48, 0.58);
+    --color-apple-card: rgba(255, 255, 255, 0.1);
+    --color-apple-card-elevated: rgba(46, 16, 84, 0.92);
+    --color-apple-border: rgba(255, 255, 255, 0.18);
+    --color-apple-border-light: rgba(255, 255, 255, 0.28);
+
+    --color-apple-accent: #ff4fd8;
+    --color-apple-accent-dim: rgba(255, 79, 216, 0.18);
+    --color-apple-accent-dark: #d946ef;
+
+    --color-apple-text: #ffffff;
+    --color-apple-text-secondary: #f0d9ff;
+    --color-apple-text-tertiary: #c4a7e7;
+
+    --shadow-apple-smooth: 0 4px 30px rgba(40, 0, 80, 0.45);
+    --shadow-apple-intense: 0 12px 40px rgba(40, 0, 80, 0.6);
+    --shadow-apple-accent-glow: 0 0 24px rgba(255, 79, 216, 0.45);
+  }
+
+  :root[data-f6='on'] body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(125deg, #ff006e, #8338ec, #3a86ff, #06d6a0, #ffbe0b, #ff006e);
+    background-size: 400% 400%;
+    animation: f6-rainbow 18s ease infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root[data-f6='on'] body::before {
+      animation: none;
+    }
+  }
+
   html,
   body {
     height: 100%;
     background-color: var(--color-apple-bg);
     transition: background-color 0.3s ease;
+  }
+
+  /* The rainbow layer sits between html and body, so body must stay see-through; pages add one tint on top. */
+  :root[data-f6='on'] {
+    background-color: #180630;
+  }
+
+  :root[data-f6='on'] body {
+    background-color: transparent;
   }
 
   body {
@@ -130,6 +177,18 @@
     background: rgba(255, 255, 255, 0.08);
     border-color: var(--color-apple-accent);
     box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.15);
+  }
+}
+
+@keyframes f6-rainbow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
   }
 }
 

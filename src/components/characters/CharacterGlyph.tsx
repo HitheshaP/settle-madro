@@ -605,7 +605,231 @@ function LogoCaptain() {
   )
 }
 
+// ---------- Fantastic 6 ----------
+
+function RoundSpecs({ color = INK }: { color?: string }) {
+  return (
+    <g fill="none" stroke={color} strokeWidth="2.4">
+      <circle cx="39" cy="44" r="7.5" fill="rgba(255,255,255,0.12)" />
+      <circle cx="61" cy="44" r="7.5" fill="rgba(255,255,255,0.12)" />
+      <path d="M46.5 43 Q50 40.5 53.5 43" />
+      <path d="M31.5 43 L24 40" />
+      <path d="M68.5 43 L76 40" />
+    </g>
+  )
+}
+
+function RectSpecs({ color = INK, width = 2.4 }: { color?: string; width?: number }) {
+  return (
+    <g fill="none" stroke={color} strokeWidth={width}>
+      <rect x="30" y="39" width="17" height="11" rx="3" fill="rgba(255,255,255,0.12)" />
+      <rect x="53" y="39" width="17" height="11" rx="3" fill="rgba(255,255,255,0.12)" />
+      <path d="M47 43.5 L53 43.5" />
+      <path d="M30 42 L24 40" />
+      <path d="M70 42 L76 40" />
+    </g>
+  )
+}
+
+function SparkleStar({ x, y, r, color }: { x: number; y: number; r: number; color: string }) {
+  return (
+    <path
+      d={`M${x} ${y - r} Q${x} ${y} ${x + r} ${y} Q${x} ${y} ${x} ${y + r} Q${x} ${y} ${x - r} ${y} Q${x} ${y} ${x} ${y - r} Z`}
+      fill={color}
+    />
+  )
+}
+
+// Ajji — short, cute, bubbly and never stops talking
+function F6Ajji() {
+  return (
+    <>
+      {/* speech bubble — she's always yapping */}
+      <path d="M62 4 H92 Q97 4 97 9 V17 Q97 22 92 22 H74 L68 27 L69 22 H62 Q57 22 57 17 V9 Q57 4 62 4 Z" fill="#fefce8" stroke={INK} strokeWidth="1.8" />
+      <text x="77" y="16.5" textAnchor="middle" fontSize="7.5" fontWeight="800" fill={INK} fontFamily="system-ui, sans-serif">
+        bla bla
+      </text>
+      {/* drawn smaller and lower in the frame: she's the short one */}
+      <g transform="translate(8 14) scale(0.84)">
+        <Body color="#f472b6" />
+        <circle cx="22" cy="24" r="11" fill="#3b2412" stroke={INK} strokeWidth="2.5" />
+        <circle cx="78" cy="24" r="11" fill="#3b2412" stroke={INK} strokeWidth="2.5" />
+        <Head skin="#f1c6a0" />
+        <path d="M23 38 Q23 16 50 16 Q77 16 77 38 Q72 26 60 27 Q55 22 50 28 Q44 22 38 27 Q28 26 23 38 Z" fill="#3b2412" stroke={INK} strokeWidth="2.5" />
+        <SparkleStar x={68} y={22} r={5} color="#fde047" />
+        <ellipse cx="32" cy="53" rx="5.5" ry="3.4" fill="#fb7185" opacity="0.7" />
+        <ellipse cx="68" cy="53" rx="5.5" ry="3.4" fill="#fb7185" opacity="0.7" />
+        <ellipse cx="39" cy="44" rx="3.8" ry="4.6" fill={INK} />
+        <ellipse cx="61" cy="44" rx="3.8" ry="4.6" fill={INK} />
+        <circle cx="40.4" cy="42.4" r="1.5" fill="#fff" />
+        <circle cx="62.4" cy="42.4" r="1.5" fill="#fff" />
+        {/* big open chatty smile */}
+        <path d="M39 54 Q50 70 61 54 Z" fill="#7f1d1d" stroke={INK} strokeWidth="2.4" strokeLinejoin="round" />
+        <path d="M44 60.5 Q50 57 56 60.5 Q50 66 44 60.5 Z" fill="#fb7185" />
+      </g>
+    </>
+  )
+}
+
+// PK — tall, beautiful and short tempered
+function F6PK() {
+  return (
+    <>
+      <path d="M22 100 Q22 76 50 76 Q78 76 78 100 Z" fill="#7c3aed" stroke={INK} strokeWidth="3" />
+      {/* long straight hair falling over the shoulders */}
+      <path d="M22 40 Q20 12 50 10 Q80 12 78 40 L82 92 Q66 86 64 70 L36 70 Q34 86 18 92 Z" fill="#1c1917" stroke={INK} strokeWidth="2.5" />
+      {/* taller, longer face */}
+      <ellipse cx="50" cy="43" rx="24" ry="29" fill="#e3ae86" stroke={INK} strokeWidth="3" />
+      <path d="M26 36 Q30 12 52 12 Q76 14 74 34 Q62 20 44 24 Q32 28 26 36 Z" fill="#1c1917" stroke={INK} strokeWidth="2.5" />
+      {/* angry brows */}
+      <path d="M31 35 L45 39.5" stroke={INK} strokeWidth="3" strokeLinecap="round" />
+      <path d="M69 35 L55 39.5" stroke={INK} strokeWidth="3" strokeLinecap="round" />
+      <ellipse cx="39" cy="45" rx="3.2" ry="3.6" fill={INK} />
+      <ellipse cx="61" cy="45" rx="3.2" ry="3.6" fill={INK} />
+      <path d="M35.5 43 L32.5 41 M64.5 43 L67.5 41" stroke={INK} strokeWidth="1.8" strokeLinecap="round" />
+      <ellipse cx="33" cy="54" rx="4.5" ry="2.6" fill="#fb7185" opacity="0.45" />
+      <ellipse cx="67" cy="54" rx="4.5" ry="2.6" fill="#fb7185" opacity="0.45" />
+      {/* pouty, unimpressed lips */}
+      <path d="M43 61 Q50 57.5 57 61 Q50 63.5 43 61 Z" fill="#be123c" stroke={INK} strokeWidth="1.6" />
+      <circle cx="26" cy="54" r="2.6" fill="#facc15" stroke={INK} strokeWidth="1" />
+      <circle cx="74" cy="54" r="2.6" fill="#facc15" stroke={INK} strokeWidth="1" />
+      {/* 💢 */}
+      <g stroke="#ef4444" strokeWidth="3" fill="none" strokeLinecap="round">
+        <path d="M82 8 Q86 12 90 8" />
+        <path d="M82 20 Q86 16 90 20" />
+        <path d="M80 10 Q84 14 80 18" />
+        <path d="M92 10 Q88 14 92 18" />
+      </g>
+    </>
+  )
+}
+
+// G.O.A.T — curly hair, specs, decent build, stubble with a hint of goatee
+function F6Goat() {
+  const curls = [
+    [25, 32], [28, 22], [35, 16], [44, 12], [54, 12], [63, 15], [70, 21], [75, 31],
+    [33, 25], [42, 19], [52, 19], [61, 22], [68, 28],
+  ]
+  return (
+    <>
+      <path d="M10 100 Q10 70 50 70 Q90 70 90 100 Z" fill="#111827" stroke={INK} strokeWidth="3" />
+      <path d="M36 72 Q50 84 64 72" stroke="#facc15" strokeWidth="2.5" fill="none" />
+      <Head skin="#e0ac7e" />
+      {curls.map(([cx, cy], i) => (
+        <circle key={i} cx={cx} cy={cy} r="6.5" fill="#2b1a10" stroke={INK} strokeWidth="1.6" />
+      ))}
+      {/* stubble along the jaw */}
+      <path d="M24 50 Q26 71 50 72 Q74 71 76 50 Q72 63 50 64 Q28 63 24 50 Z" fill="#3b2418" opacity="0.32" />
+      <path d="M40 55 Q50 52 60 55" stroke="#3b2418" strokeWidth="2.2" opacity="0.5" fill="none" strokeLinecap="round" />
+      <path d="M33 37 L44 36 M56 36 L67 37" stroke="#2b1a10" strokeWidth="2.6" strokeLinecap="round" />
+      <circle cx="39" cy="44" r="3" fill={INK} />
+      <circle cx="61" cy="44" r="3" fill={INK} />
+      <RoundSpecs />
+      <path d="M41 58 Q50 63.5 59 58" stroke={INK} strokeWidth="2.8" fill="none" strokeLinecap="round" />
+      {/* hint of goatee */}
+      <path d="M45 65 Q50 71.5 55 65 Q50 67.5 45 65 Z" fill="#2b1a10" stroke="#2b1a10" strokeWidth="1" />
+    </>
+  )
+}
+
+// MA — intelligent, athletic topper with specs and stubble that's still growing in
+function F6MA() {
+  const stubble = [
+    [43, 66], [47, 67.5], [51, 68], [55, 67], [58, 65], [40, 63], [61, 62], [46, 64.5], [53, 65],
+  ]
+  return (
+    <>
+      <path d="M8 100 Q10 68 50 68 Q90 68 92 100 Z" fill="#0891b2" stroke={INK} strokeWidth="3" />
+      <path d="M40 69 L50 80 L60 69" stroke="#f8fafc" strokeWidth="3" fill="none" />
+      <text x="50" y="96" textAnchor="middle" fontSize="12" fontWeight="900" fill="#f8fafc" fontFamily="system-ui, sans-serif">
+        #1
+      </text>
+      <Head skin="#eec39a" />
+      {/* neat side-parted topper hair */}
+      <path d="M23 38 Q21 15 48 14 Q78 13 77 38 Q74 25 62 22 Q52 27 40 24 Q28 26 23 38 Z" fill="#1c1410" stroke={INK} strokeWidth="2.5" />
+      <path d="M40 15 Q38 20 40 24" stroke="#3f3f46" strokeWidth="1.5" fill="none" />
+      <path d="M33 36 L44 35.5 M56 35.5 L67 36" stroke="#1c1410" strokeWidth="2.4" strokeLinecap="round" />
+      <circle cx="38.5" cy="44.5" r="3" fill={INK} />
+      <circle cx="61.5" cy="44.5" r="3" fill={INK} />
+      <RectSpecs />
+      <path d="M42 57 Q50 62 58 57" stroke={INK} strokeWidth="2.8" fill="none" strokeLinecap="round" />
+      {stubble.map(([cx, cy], i) => (
+        <circle key={i} cx={cx} cy={cy} r="0.9" fill="#3b2418" opacity="0.45" />
+      ))}
+    </>
+  )
+}
+
+// Dandan — dark skinned, handsome, no specs, just the moustache; shining eyes with long lashes
+function F6Dandan() {
+  return (
+    <>
+      <path d="M12 100 Q12 71 50 71 Q88 71 88 100 Z" fill="#047857" stroke={INK} strokeWidth="3" />
+      <path d="M38 72 L50 84 L62 72 L56 71 L50 77 L44 71 Z" fill="#ecfdf5" stroke={INK} strokeWidth="1.8" />
+      <Head skin="#7a4a2a" />
+      <path d="M23 38 Q22 16 50 15 Q78 16 77 38 Q76 27 64 24 Q50 21 36 24 Q24 27 23 38 Z" fill="#0a0a0a" stroke={INK} strokeWidth="2.5" />
+      <path d="M32 36 Q38 33 45 35.5 M55 35.5 Q62 33 68 36" stroke="#0a0a0a" strokeWidth="2.6" fill="none" strokeLinecap="round" />
+      {/* shining eyes */}
+      <ellipse cx="39" cy="44.5" rx="5.2" ry="5.6" fill="#fff" stroke={INK} strokeWidth="1.6" />
+      <ellipse cx="61" cy="44.5" rx="5.2" ry="5.6" fill="#fff" stroke={INK} strokeWidth="1.6" />
+      <circle cx="39.5" cy="45.3" r="3.3" fill="#1c1917" />
+      <circle cx="61.5" cy="45.3" r="3.3" fill="#1c1917" />
+      <circle cx="41" cy="43.6" r="1.4" fill="#fff" />
+      <circle cx="63" cy="43.6" r="1.4" fill="#fff" />
+      <circle cx="38.4" cy="46.8" r="0.7" fill="#fff" />
+      <circle cx="60.4" cy="46.8" r="0.7" fill="#fff" />
+      {/* long lashes */}
+      <g stroke={INK} strokeWidth="1.8" strokeLinecap="round">
+        <path d="M34.2 41.5 L30.5 38.6 M36.2 39.7 L34 35.8 M39 39 L38.6 34.8" />
+        <path d="M65.8 41.5 L69.5 38.6 M63.8 39.7 L66 35.8 M61 39 L61.4 34.8" />
+      </g>
+      <SparkleStar x={26} y={34} r={4.5} color="#fde047" />
+      <SparkleStar x={75} y={33} r={3.5} color="#fef9c3" />
+      {/* moustache only */}
+      <path d="M37 56 Q43 50.5 50 54.5 Q57 50.5 63 56 Q57 58.5 50 57 Q43 58.5 37 56 Z" fill="#0a0a0a" stroke={INK} strokeWidth="1.2" />
+      <path d="M43 62 Q50 66 57 62" stroke={INK} strokeWidth="2.6" fill="none" strokeLinecap="round" />
+    </>
+  )
+}
+
+// Bro — very slim, very fair gamer with headphones and specs
+function F6Bro() {
+  return (
+    <>
+      <path d="M30 100 Q30 78 50 78 Q70 78 70 100 Z" fill="#1f2937" stroke={INK} strokeWidth="3" />
+      <rect x="45" y="66" width="10" height="14" fill="#fde7d6" stroke={INK} strokeWidth="2" />
+      {/* tiny controller on the tee */}
+      <path d="M41 88 Q41 84 45 84 H55 Q59 84 59 88 L60 93 Q60 96 57 95 L54 92 H46 L43 95 Q40 96 40 93 Z" fill="#a855f7" stroke={INK} strokeWidth="1.2" />
+      {/* slim, narrow face */}
+      <ellipse cx="50" cy="45" rx="21" ry="26" fill="#fde7d6" stroke={INK} strokeWidth="3" />
+      <path d="M29 40 Q28 18 50 17 Q72 18 71 40 Q66 28 58 30 L54 24 L50 30 L44 25 L40 31 Q32 30 29 40 Z" fill="#6b4423" stroke={INK} strokeWidth="2.3" />
+      <circle cx="41" cy="45" r="2.8" fill={INK} />
+      <circle cx="59" cy="45" r="2.8" fill={INK} />
+      <g fill="none" stroke={INK} strokeWidth="2">
+        <rect x="33" y="40" width="15" height="10" rx="3" fill="rgba(255,255,255,0.14)" />
+        <rect x="52" y="40" width="15" height="10" rx="3" fill="rgba(255,255,255,0.14)" />
+        <path d="M48 44 L52 44" />
+      </g>
+      <path d="M43 58 Q50 62 57 58" stroke={INK} strokeWidth="2.6" fill="none" strokeLinecap="round" />
+      {/* headphones */}
+      <path d="M25 44 Q24 10 50 10 Q76 10 75 44" stroke="#111827" strokeWidth="5" fill="none" strokeLinecap="round" />
+      <rect x="18" y="36" width="12" height="19" rx="5" fill="#111827" stroke={INK} strokeWidth="1.6" />
+      <rect x="70" y="36" width="12" height="19" rx="5" fill="#111827" stroke={INK} strokeWidth="1.6" />
+      <rect x="20.5" y="39" width="3" height="13" rx="1.5" fill="#22d3ee" />
+      <rect x="76.5" y="39" width="3" height="13" rx="1.5" fill="#f472b6" />
+      <path d="M24 55 Q26 65 38 64" stroke="#111827" strokeWidth="2.4" fill="none" strokeLinecap="round" />
+      <circle cx="39" cy="64" r="2.4" fill="#22d3ee" stroke={INK} strokeWidth="1" />
+    </>
+  )
+}
+
 const RENDERERS: Record<string, () => React.ReactElement> = {
+  'f6-ajji': F6Ajji,
+  'f6-pk': F6PK,
+  'f6-goat': F6Goat,
+  'f6-ma': F6MA,
+  'f6-dandan': F6Dandan,
+  'f6-bro': F6Bro,
   'guy-nerdy': GuyNerdy,
   'guy-rich': GuyRich,
   'guy-handsome': GuyHandsome,

@@ -10,7 +10,14 @@ import AppMenu from '../components/ui/AppMenu'
 import CharacterAvatar from '../components/characters/CharacterAvatar'
 import { useAppStore } from '../lib/store'
 import { useAnonymousAuth } from '../lib/useAnonymousAuth'
-import { createGroup, joinGroupByCode, subscribeToUserGroups, type Group } from '../lib/groups'
+import {
+  createGroup,
+  groupParticipants,
+  isFantastic6Group,
+  joinGroupByCode,
+  subscribeToUserGroups,
+  type Group,
+} from '../lib/groups'
 import { useProfiles } from '../lib/useProfiles'
 
 type ModalState = 'none' | 'create' | 'join'
@@ -183,7 +190,9 @@ export default function Groups() {
 }
 
 function GroupCard({ group, onOpen }: { group: Group; onOpen: () => void }) {
-  const profiles = useProfiles(group.memberIds)
+  const participants = groupParticipants(group)
+  const profiles = useProfiles(participants)
+  const f6 = isFantastic6Group(group)
 
   return (
     <Card 
@@ -192,13 +201,18 @@ function GroupCard({ group, onOpen }: { group: Group; onOpen: () => void }) {
       className="flex cursor-pointer items-center justify-between bg-white/[0.03] hover:bg-white/[0.06] transition-colors border border-apple-border duration-200"
     >
       <div className="flex flex-col gap-0.5">
-        <p className="text-base font-semibold tracking-tight text-apple-text">{group.name}</p>
+        <p className="text-base font-semibold tracking-tight text-apple-text">
+          {group.name}
+          {f6 && <span className="ml-1.5">✨</span>}
+        </p>
         <p className="text-xs text-apple-text-secondary font-medium">
-          {group.memberIds.length} {group.memberIds.length === 1 ? 'member' : 'members'} · Code: {group.inviteCode}
+          {f6
+            ? 'Secret crew · 6 members'
+            : `${participants.length} ${participants.length === 1 ? 'member' : 'members'} · Code: ${group.inviteCode}`}
         </p>
       </div>
       <div className="flex -space-x-2">
-        {group.memberIds.slice(0, 4).map((uid) =>
+        {participants.slice(0, f6 ? 6 : 4).map((uid) =>
           profiles[uid] ? (
             <div key={uid} className="p-0.5 bg-[#1c1c1e] rounded-full border border-apple-border shadow-sm">
               <CharacterAvatar characterId={profiles[uid].characterId} size={32} />

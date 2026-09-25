@@ -2,8 +2,10 @@ import {
   addDoc,
   arrayUnion,
   collection,
+  deleteField,
   doc,
   getDoc,
+  type DocumentData,
   onSnapshot,
   orderBy,
   query,
@@ -12,16 +14,39 @@ import {
   where,
   writeBatch,
 } from 'firebase/firestore'
-import { db, isFirebaseConfigured } from './firebase'
+import { auth, db, isFirebaseConfigured } from './firebase'
 import { localBackend } from './localBackend'
 import { findDuplicateNames } from './users'
+import { FANTASTIC6_GROUP_NAME, FANTASTIC6_IDS, FANTASTIC6_KIND, normalizeFantastic6Code } from './fantastic6'
 
 export interface Group {
   id: string
   name: string
   inviteCode: string
+  /** Signed-in accounts with access to the group */
   memberIds: string[]
+  kind?: typeof FANTASTIC6_KIND
   createdAt: number
+}
+
+export function isFantastic6Group(group: Pick<Group, 'kind'> | null | undefined) {
+  return group?.kind === FANTASTIC6_KIND
+}
+
+/** Who expenses can be paid by / split between: the fixed crew for Fantastic 6, otherwise the members. */
+export function groupParticipants(group: Group) {
+  return isFantastic6Group(group) ? FANTASTIC6_IDS : group.memberIds
+}
+
+function toGroup(id: string, data: DocumentData): Group {
+  return {
+    id,
+    name: data.name,
+    inviteCode: data.inviteCode,
+    memberIds: data.memberIds ?? [],
+    ...(data.kind === FANTASTIC6_KIND ? { kind: FANTASTIC6_KIND } : {}),
+    createdAt: data.createdAt?.toMillis?.() ?? 0,
+  }
 }
 
 export interface Expense {
@@ -134,6 +159,49 @@ export async function joinGroupByCode(code: string, uid: string): Promise<JoinGr
   return { groupId, duplicateNames }
 }
 
+/**
+ * Joins the shared Fantastic 6 group using the secret code, creating it the first time anyone
+ * enters the code. The code (already verified by the caller) doubles as its invite-code doc id.
+ */
+export async function enterFantastic6Group(secretCode: string, uid: string): Promise<string> {
+  const code = normalizeFantastic6Code(secretCode)
+
+  if (!isFirebaseConfigured) {
+    return localBackend.joinOrCreateGroup(code, uid, { name: FANTASTIC6_GROUP_NAME, kind: FANTASTIC6_KIND })
+  }
+
+  await auth.authStateReady()
+  const codeRef = doc(db, 'inviteCodes', code)
+
+  const join = async (groupId: string) => {
+    await withTimeout(updateDoc(doc(db, 'groups', groupId), { memberIds: arrayUnion(uid) }))
+    return groupId
+  }
+
+  const existing = await withTimeout(getDoc(codeRef))
+  if (existing.exists()) return join(existing.data().groupId as string)
+
+  const groupRef = doc(collection(db, 'groups'))
+  const batch = writeBatch(db)
+  batch.set(groupRef, {
+    name: FANTASTIC6_GROUP_NAME,
+    inviteCode: code,
+    kind: FANTASTIC6_KIND,
+    memberIds: [uid],
+    createdAt: serverTimestamp(),
+  })
+  batch.set(codeRef, { groupId: groupRef.id })
+  try {
+    await withTimeout(batch.commit())
+    return groupRef.id
+  } catch (err) {
+    // Someone else created it at the same moment — join theirs instead.
+    const created = await withTimeout(getDoc(codeRef))
+    if (created.exists()) return join(created.data().groupId as string)
+    throw err
+  }
+}
+
 export function subscribeToUserGroups(uid: string, callback: (groups: Group[]) => void) {
   if (!isFirebaseConfigured) {
     return localBackend.subscribeUserGroups(uid, callback)
@@ -142,16 +210,7 @@ export function subscribeToUserGroups(uid: string, callback: (groups: Group[]) =
   const q = query(collection(db, 'groups'), where('memberIds', 'array-contains', uid))
   return onSnapshot(q, (snapshot) => {
     callback(
-      snapshot.docs.map((d) => {
-        const data = d.data()
-        return {
-          id: d.id,
-          name: data.name,
-          inviteCode: data.inviteCode,
-          memberIds: data.memberIds ?? [],
-          createdAt: data.createdAt?.toMillis?.() ?? 0,
-        }
-      }),
+      snapshot.docs.map((d) => toGroup(d.id, d.data())),
     )
   })
 }
@@ -166,14 +225,7 @@ export function subscribeToGroup(groupId: string, callback: (group: Group | null
       callback(null)
       return
     }
-    const data = snap.data()
-    callback({
-      id: snap.id,
-      name: data.name,
-      inviteCode: data.inviteCode,
-      memberIds: data.memberIds ?? [],
-      createdAt: data.createdAt?.toMillis?.() ?? 0,
-    })
+    callback(toGroup(snap.id, snap.data()))
   })
 }
 
@@ -235,6 +287,26 @@ export async function addExpense(groupId: string, expense: Omit<Expense, 'id' | 
     ...expense,
     createdAt: serverTimestamp(),
   })
+}
+
+export async function updateExpense(
+  groupId: string,
+  expenseId: string,
+  expense: Omit<Expense, 'id' | 'createdAt'>,
+) {
+  if (!isFirebaseConfigured) {
+    localBackend.updateExpense(groupId, expenseId, expense)
+    return
+  }
+
+  await withTimeout(
+    updateDoc(doc(db, 'groups', groupId, 'expenses', expenseId), {
+      ...expense,
+      // Switching a custom split back to equal must drop the old per-person amounts.
+      customSplits: expense.customSplits ?? deleteField(),
+      updatedAt: serverTimestamp(),
+    }),
+  )
 }
 
 export async function recordSettlement(groupId: string, settlement: Omit<Settlement, 'id' | 'settledAt'>) {

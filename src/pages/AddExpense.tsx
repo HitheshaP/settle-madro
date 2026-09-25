@@ -1,41 +1,85 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import Button from '../components/ui/Button'
 import TextInput from '../components/ui/TextInput'
 import CharacterAvatar from '../components/characters/CharacterAvatar'
 import ExpenseCelebration from '../components/animations/ExpenseCelebration'
-import { addExpense, subscribeToGroup, type Group } from '../lib/groups'
+import {
+  addExpense,
+  groupParticipants,
+  isFantastic6Group,
+  subscribeToExpenses,
+  subscribeToGroup,
+  updateExpense,
+  type Group,
+} from '../lib/groups'
 import { detectExpenseCategory } from '../lib/expenseCategory'
 import { suggestEmoji } from '../lib/expenseEmoji'
 import { useProfiles } from '../lib/useProfiles'
 import { useAppStore } from '../lib/store'
 
 export default function AddExpense() {
-  const { groupId } = useParams<{ groupId: string }>()
+  const { groupId, expenseId } = useParams<{ groupId: string; expenseId?: string }>()
   const navigate = useNavigate()
   const currentUser = useAppStore((state) => state.user)
+  const myCrewId = useAppStore((state) => state.fantastic6?.me)
+  const editing = Boolean(expenseId)
 
   const [group, setGroup] = useState<Group | null>(null)
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
-  const [paidBy, setPaidBy] = useState(currentUser?.uid ?? '')
+  const [paidBy, setPaidBy] = useState('')
   const [splitBetween, setSplitBetween] = useState<string[]>([])
   const [splitType, setSplitType] = useState<'equal' | 'custom'>('equal')
   const [customSplits, setCustomSplits] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [justSaved, setJustSaved] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const prefilled = useRef(false)
+  const [prefillDone, setPrefillDone] = useState(!expenseId)
 
-  const profiles = useProfiles(group?.memberIds ?? [])
+  const participants = group ? groupParticipants(group) : []
+  const f6 = isFantastic6Group(group)
+  const profiles = useProfiles(participants)
 
   useEffect(() => {
     if (!groupId) return
     return subscribeToGroup(groupId, (nextGroup) => {
       setGroup(nextGroup)
-      if (nextGroup) setSplitBetween((prev) => (prev.length ? prev : nextGroup.memberIds))
+      if (!nextGroup || editing) return
+      const people = groupParticipants(nextGroup)
+      // Default payer: you (your crew character in Fantastic 6). Default split: everyone.
+      const me = isFantastic6Group(nextGroup) ? myCrewId : currentUser?.uid
+      setPaidBy((prev) => prev || (me && people.includes(me) ? me : ''))
+      setSplitBetween((prev) => (prev.length ? prev : people))
     })
-  }, [groupId])
+  }, [groupId, editing, myCrewId, currentUser?.uid])
+
+  // Edit mode: prefill the form once from the saved expense.
+  useEffect(() => {
+    if (!groupId || !expenseId) return
+    return subscribeToExpenses(groupId, (expenses) => {
+      if (prefilled.current) return
+      const expense = expenses.find((e) => e.id === expenseId)
+      if (!expense) {
+        setLoadError('This expense no longer exists.')
+        return
+      }
+      prefilled.current = true
+      setPrefillDone(true)
+      setLoadError(null)
+      setDescription(expense.description)
+      setAmount(String(expense.amount))
+      setPaidBy(expense.paidBy)
+      setSplitBetween(expense.splitBetween)
+      setSplitType(expense.splitType)
+      setCustomSplits(
+        Object.fromEntries(Object.entries(expense.customSplits ?? {}).map(([uid, value]) => [uid, String(value)])),
+      )
+    })
+  }, [groupId, expenseId])
 
   const numericAmount = Number(amount) || 0
   const liveEmoji = useMemo(() => (description.trim() ? suggestEmoji(description) : null), [description])
@@ -74,7 +118,7 @@ export default function AddExpense() {
 
     setSaving(true)
     try {
-      await addExpense(groupId, {
+      const expense = {
         description: description.trim(),
         amount: numericAmount,
         paidBy,
@@ -88,16 +132,23 @@ export default function AddExpense() {
               ),
             }
           : {}),
-      })
+      }
+      if (expenseId) {
+        await updateExpense(groupId, expenseId, expense)
+        navigate(`/groups/${groupId}`)
+        return
+      }
+      await addExpense(groupId, expense)
       setSaving(false)
       setJustSaved(true)
-    } catch {
-      setError('Network request failed. Please check connection.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Network request failed. Please check connection.')
       setSaving(false)
     }
   }
 
   if (!groupId || !group) return null
+  if (!prefillDone && !loadError) return null
 
   return (
     <motion.div
@@ -114,7 +165,10 @@ export default function AddExpense() {
           >
             <span className="text-base">‹</span> Back
           </button>
-          <h1 className="text-3xl font-extrabold tracking-tight text-apple-text">Add Expense</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-apple-text">
+            {editing ? 'Edit Expense' : 'Add Expense'}
+          </h1>
+          {loadError && <p className="text-sm font-medium text-rose-500">{loadError}</p>}
         </div>
 
         <div className="flex flex-col gap-5">
@@ -154,7 +208,7 @@ export default function AddExpense() {
         <div className="flex flex-col gap-3">
           <p className="text-[12px] font-semibold text-apple-text-secondary uppercase tracking-widest pl-1">Paid By</p>
           <div className="flex flex-wrap gap-4 pl-1">
-            {group.memberIds.map((uid) => (
+            {participants.map((uid) => (
               <button key={uid} onClick={() => setPaidBy(uid)} className="flex flex-col items-center gap-1.5 focus:outline-none">
                 <div className={`p-0.5 rounded-full transition-all duration-200 ${paidBy === uid ? 'ring-2 ring-apple-accent scale-105' : 'opacity-60 hover:opacity-80'}`}>
                   <CharacterAvatar characterId={profiles[uid]?.characterId ?? ''} size={48} />
@@ -169,8 +223,13 @@ export default function AddExpense() {
 
         <div className="flex flex-col gap-3">
           <p className="text-[12px] font-semibold text-apple-text-secondary uppercase tracking-widest pl-1">Split Between</p>
+          {f6 && (
+            <p className="-mt-1.5 pl-1 text-[11px] font-medium text-apple-text-secondary">
+              Tap to remove anyone who wasn't there. They won't be charged.
+            </p>
+          )}
           <div className="flex flex-wrap gap-4 pl-1">
-            {group.memberIds.map((uid) => (
+            {participants.map((uid) => (
               <button key={uid} onClick={() => toggleMember(uid)} className="flex flex-col items-center gap-1.5 focus:outline-none">
                 <div className={`p-0.5 rounded-full transition-all duration-200 ${splitBetween.includes(uid) ? 'ring-2 ring-apple-accent scale-105' : 'opacity-40 hover:opacity-60'}`}>
                   <CharacterAvatar characterId={profiles[uid]?.characterId ?? ''} size={48} />
@@ -234,10 +293,10 @@ export default function AddExpense() {
         {error && <p className="mb-2 text-xs font-medium italic text-rose-500">{error}</p>}
         <Button
           className="mb-4 w-full py-4 text-sm font-semibold"
-          disabled={saving || justSaved}
+          disabled={saving || justSaved || Boolean(loadError)}
           onClick={handleSubmit}
         >
-          {saving ? 'Saving...' : 'Save Expense'}
+          {saving ? 'Saving...' : editing ? 'Save Changes' : 'Save Expense'}
         </Button>
       </div>
 

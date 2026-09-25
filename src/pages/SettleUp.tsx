@@ -7,6 +7,7 @@ import CharacterAvatar from '../components/characters/CharacterAvatar'
 import SettleAnimation from '../components/animations/SettleAnimation'
 import { computeNetBalances, simplifyDebts, type SimplifiedSettlement } from '../lib/debtSimplification'
 import {
+  groupParticipants,
   recordSettlement,
   subscribeToExpenses,
   subscribeToGroup,
@@ -33,7 +34,7 @@ export default function SettleUp() {
   const [resolvedKeys, setResolvedKeys] = useState<Set<string>>(new Set())
   const [animating, setAnimating] = useState<SimplifiedSettlement | null>(null)
 
-  const profiles = useProfiles(group?.memberIds ?? [])
+  const profiles = useProfiles(group ? groupParticipants(group) : [])
 
   useEffect(() => {
     if (!groupId) return
