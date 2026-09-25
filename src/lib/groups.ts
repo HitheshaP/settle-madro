@@ -3,13 +3,14 @@ import {
   arrayUnion,
   collection,
   doc,
-  getDocs,
+  getDoc,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
   updateDoc,
   where,
+  writeBatch,
 } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from './firebase'
 import { localBackend } from './localBackend'
@@ -52,23 +53,50 @@ export async function createGroup(name: string, ownerUid: string): Promise<strin
     return localBackend.createGroup(name, ownerUid)
   }
 
+  // Invite codes live in their own `inviteCodes/{code}` docs so a code can be checked and
+  // resolved with a single-document get. Querying `groups` by inviteCode is rejected by the
+  // security rules, since a user may only read groups they already belong to.
   let code = randomInviteCode()
-  const groupsRef = collection(db, 'groups')
-
   for (let attempt = 0; attempt < 5; attempt++) {
-    const existing = await getDocs(query(groupsRef, where('inviteCode', '==', code)))
-    if (existing.empty) break
+    const existing = await withTimeout(getDoc(doc(db, 'inviteCodes', code)))
+    if (!existing.exists()) break
     code = randomInviteCode()
   }
 
-  const docRef = await addDoc(groupsRef, {
+  const groupRef = doc(collection(db, 'groups'))
+  const batch = writeBatch(db)
+  batch.set(groupRef, {
     name,
     inviteCode: code,
     memberIds: [ownerUid],
     createdAt: serverTimestamp(),
   })
+  batch.set(doc(db, 'inviteCodes', code), { groupId: groupRef.id })
+  await withTimeout(batch.commit())
 
-  return docRef.id
+  return groupRef.id
+}
+
+const REQUEST_TIMEOUT_MS = 15000
+
+/** Firestore writes wait indefinitely for the server when offline; surface that as an error instead. */
+function withTimeout<T>(promise: Promise<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error('Connection timed out. Check your internet connection and retry.')),
+      REQUEST_TIMEOUT_MS,
+    )
+    promise.then(
+      (value) => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      (err) => {
+        clearTimeout(timer)
+        reject(err)
+      },
+    )
+  })
 }
 
 export interface JoinGroupResult {
@@ -86,17 +114,17 @@ export async function joinGroupByCode(code: string, uid: string): Promise<JoinGr
     groupId = result.groupId
     existingMemberIds = result.existingMemberIds
   } else {
-    const groupsRef = collection(db, 'groups')
-    const matches = await getDocs(query(groupsRef, where('inviteCode', '==', code)))
-
-    if (matches.empty) {
+    const codeSnap = await withTimeout(getDoc(doc(db, 'inviteCodes', code)))
+    if (!codeSnap.exists()) {
       throw new Error('No group found with that code')
     }
 
-    const groupDoc = matches.docs[0]
-    existingMemberIds = groupDoc.data().memberIds ?? []
-    await updateDoc(groupDoc.ref, { memberIds: arrayUnion(uid) })
-    groupId = groupDoc.id
+    groupId = codeSnap.data().groupId as string
+    const groupRef = doc(db, 'groups', groupId)
+    // Join first: the group is only readable once we're in memberIds.
+    await withTimeout(updateDoc(groupRef, { memberIds: arrayUnion(uid) }))
+    const groupSnap = await withTimeout(getDoc(groupRef))
+    existingMemberIds = groupSnap.data()?.memberIds ?? []
   }
 
   const duplicateNames = await findDuplicateNames(

@@ -45,8 +45,8 @@ export default function Groups() {
       const groupId = await createGroup(inputValue.trim(), authUser.uid)
       closeModal()
       navigate(`/groups/${groupId}`)
-    } catch {
-      setError('Connection timeout. Please retry.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not create the group. Please retry.')
     } finally {
       setBusy(false)
     }
