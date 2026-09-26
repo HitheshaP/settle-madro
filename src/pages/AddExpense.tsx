@@ -19,7 +19,7 @@ import { detectExpenseCategory } from '../lib/expenseCategory'
 import { suggestEmoji } from '../lib/expenseEmoji'
 import { useProfiles } from '../lib/useProfiles'
 import { useAppStore } from '../lib/store'
-import { useColorfulMode } from '../lib/useColorfulMode'
+import { useFantastic6Access } from '../lib/useFantastic6Access'
 
 export default function AddExpense() {
   const { groupId, expenseId } = useParams<{ groupId: string; expenseId?: string }>()
@@ -44,7 +44,7 @@ export default function AddExpense() {
   const participants = group ? groupParticipants(group) : []
   const f6 = isFantastic6Group(group)
   const profiles = useProfiles(groupProfileIds(group))
-  useColorfulMode(f6)
+  useFantastic6Access(f6)
 
   useEffect(() => {
     if (!groupId) return
@@ -53,7 +53,7 @@ export default function AddExpense() {
       if (!nextGroup || editing) return
       const people = groupParticipants(nextGroup)
       // Default payer: you (your crew character in Fantastic 6). Default split: everyone.
-      const me = currentUser && isFantastic6Group(nextGroup) ? nextGroup.crew?.[currentUser.uid] : currentUser?.uid
+      const me = isFantastic6Group(nextGroup) ? useAppStore.getState().fantastic6Me : currentUser?.uid
       setPaidBy((prev) => prev || (me && people.includes(me) ? me : ''))
       setSplitBetween((prev) => (prev.length ? prev : people))
     })

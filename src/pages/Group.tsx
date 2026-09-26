@@ -5,8 +5,8 @@ import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import OfflineBanner from '../components/ui/OfflineBanner'
 import CharacterAvatar from '../components/characters/CharacterAvatar'
-import Fantastic6Gate from '../components/fantastic6/Fantastic6Gate'
 import {
+  claimFantastic6Character,
   groupParticipants,
   groupProfileIds,
   isFantastic6Group,
@@ -19,7 +19,7 @@ import { fantastic6Profile } from '../lib/fantastic6'
 import { useProfiles } from '../lib/useProfiles'
 import { useOnlineStatus } from '../lib/useOnlineStatus'
 import { useAppStore } from '../lib/store'
-import { useColorfulMode } from '../lib/useColorfulMode'
+import { useFantastic6Access } from '../lib/useFantastic6Access'
 
 export default function Group() {
   const { groupId } = useParams<{ groupId: string }>()
@@ -33,9 +33,8 @@ export default function Group() {
   const participants = group ? groupParticipants(group) : []
   const profiles = useProfiles(groupProfileIds(group))
   const f6 = isFantastic6Group(group)
-  const myCrewId = currentUser ? group?.crew?.[currentUser.uid] : undefined
-  const [pickOpen, setPickOpen] = useState(false)
-  useColorfulMode(f6)
+  const myCrewId = useFantastic6Access(f6)
+  const savedCrewId = currentUser ? group?.crew?.[currentUser.uid] : undefined
 
   const routeDuplicateNames = (location.state as { duplicateNames?: string[] } | null)?.duplicateNames
   const [duplicateNames, setDuplicateNames] = useState<string[]>(routeDuplicateNames ?? [])
@@ -49,6 +48,14 @@ export default function Group() {
     if (!groupId) return
     return subscribeToExpenses(groupId, setExpenses)
   }, [groupId])
+
+  // In Fantastic 6 you're whoever you picked on the way in this visit — record that on the group.
+  useEffect(() => {
+    if (!f6 || !groupId || !currentUser || !myCrewId || savedCrewId === myCrewId) return
+    claimFantastic6Character(groupId, currentUser.uid, myCrewId).catch(() => {
+      // Non-fatal: the group still works; the next visit will retry.
+    })
+  }, [f6, groupId, currentUser, myCrewId, savedCrewId])
 
   if (!groupId) return null
 
@@ -68,36 +75,22 @@ export default function Group() {
 
       <div className="flex flex-col gap-1.5 mt-2">
         <button 
-          onClick={() => navigate('/groups')}
+          onClick={() => navigate(f6 ? '/fantastic6' : '/groups')}
           className="text-apple-accent font-semibold text-sm flex items-center gap-1 mb-2 self-start hover:opacity-85 transition-opacity"
         >
-          <span className="text-base">‹</span> Groups
+          <span className="text-base">‹</span> {f6 ? 'Fantastic 6' : 'Groups'}
         </button>
         <h1 className="text-3xl font-extrabold tracking-tight text-apple-text">
-          {f6 ? (
-            <span className="bg-[linear-gradient(90deg,#fff,#ffd6f5,#fff3b0,#b8f2ff)] bg-clip-text text-transparent">
-              Fantastic 6 ✨
-            </span>
-          ) : (
-            (group?.name ?? 'Loading...')
-          )}
+          {group?.name ?? 'Loading...'}
+          {f6 && <span className="ml-2">✨</span>}
         </h1>
-        {f6 ? (
+        {f6 && myCrewId && (
           <p className="text-xs font-medium tracking-wide text-apple-text-secondary">
-            {myCrewId ? (
-              <>
-                You're <span className="font-bold text-apple-text">{fantastic6Profile(myCrewId).name}</span>
-                {' · '}
-              </>
-            ) : (
-              "You haven't picked your character · "
-            )}
-            <button onClick={() => setPickOpen(true)} className="font-semibold text-apple-accent">
-              {myCrewId ? 'change' : 'pick now'}
-            </button>
+            You're <span className="font-bold text-apple-text">{fantastic6Profile(myCrewId).name}</span>
             {` · ${participants.length} of 6 in`}
           </p>
-        ) : group && (
+        )}
+        {group && (
           <p className="text-xs text-apple-text-secondary font-medium tracking-wide">
             INVITE CODE: <span className="text-apple-text select-all font-mono font-bold">{group.inviteCode}</span>
           </p>
@@ -182,8 +175,6 @@ export default function Group() {
           </Card>
         )}
       </div>
-
-      {f6 && <Fantastic6Gate open={pickOpen} onClose={() => setPickOpen(false)} mode="pick" groupId={groupId} />}
     </div>
   )
 }

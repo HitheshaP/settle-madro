@@ -33,6 +33,13 @@ export default function Groups() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
+  // Being back on the normal list means you've left Fantastic 6: forget this visit's character
+  // so next time every crew character is free to pick again.
+  const leaveFantastic6 = useAppStore((state) => state.leaveFantastic6)
+  useEffect(() => {
+    leaveFantastic6()
+  }, [leaveFantastic6])
+
   useEffect(() => {
     if (!authUser) return
     // Fantastic 6 lives only behind its secret code in the menu, never in the normal list.

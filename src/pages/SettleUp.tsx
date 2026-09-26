@@ -18,7 +18,7 @@ import {
   type Settlement,
 } from '../lib/groups'
 import { useProfiles } from '../lib/useProfiles'
-import { useColorfulMode } from '../lib/useColorfulMode'
+import { useFantastic6Access } from '../lib/useFantastic6Access'
 
 function settlementKey(settlement: SimplifiedSettlement) {
   return `${settlement.from}-${settlement.to}-${settlement.amount}`
@@ -35,7 +35,7 @@ export default function SettleUp() {
   const [animating, setAnimating] = useState<SimplifiedSettlement | null>(null)
 
   const profiles = useProfiles(groupProfileIds(group))
-  useColorfulMode(isFantastic6Group(group))
+  useFantastic6Access(isFantastic6Group(group))
 
   useEffect(() => {
     if (!groupId) return

@@ -14,10 +14,10 @@ import {
   where,
   writeBatch,
 } from 'firebase/firestore'
-import { auth, db, isFirebaseConfigured } from './firebase'
+import { db, isFirebaseConfigured } from './firebase'
 import { localBackend } from './localBackend'
 import { findDuplicateNames } from './users'
-import { FANTASTIC6_GROUP_NAME, FANTASTIC6_IDS, FANTASTIC6_KIND, normalizeFantastic6Code } from './fantastic6'
+import { FANTASTIC6_IDS, FANTASTIC6_KIND } from './fantastic6'
 
 export interface Group {
   id: string
@@ -36,8 +36,8 @@ export function isFantastic6Group(group: Pick<Group, 'kind'> | null | undefined)
 }
 
 /**
- * Who expenses can be paid by / split between. In Fantastic 6 that's only the crew characters
- * someone has actually picked (so 3 friends picking = a group of 3); otherwise the members.
+ * Who expenses can be paid by / split between. In Fantastic 6 that's the crew characters of the
+ * people who created or joined the group (3 friends = a group of 3); otherwise the members.
  */
 export function groupParticipants(group: Group) {
   if (!isFantastic6Group(group)) return group.memberIds
@@ -86,9 +86,17 @@ function randomInviteCode() {
   return Math.floor(100000 + Math.random() * 900000).toString()
 }
 
-export async function createGroup(name: string, ownerUid: string): Promise<string> {
+/**
+ * Creates a group. Passing `crewCharacter` makes it a Fantastic 6 group, with the creator
+ * playing that crew character.
+ */
+export async function createGroup(name: string, ownerUid: string, crewCharacter?: string): Promise<string> {
+  const fantastic6: Pick<Group, 'kind' | 'crew'> = crewCharacter
+    ? { kind: FANTASTIC6_KIND, crew: { [ownerUid]: crewCharacter } }
+    : {}
+
   if (!isFirebaseConfigured) {
-    return localBackend.createGroup(name, ownerUid)
+    return localBackend.createGroup(name, ownerUid, fantastic6)
   }
 
   // Invite codes live in their own `inviteCodes/{code}` docs so a code can be checked and
@@ -107,9 +115,11 @@ export async function createGroup(name: string, ownerUid: string): Promise<strin
     name,
     inviteCode: code,
     memberIds: [ownerUid],
+    ...fantastic6,
     createdAt: serverTimestamp(),
   })
-  batch.set(doc(db, 'inviteCodes', code), { groupId: groupRef.id })
+  // The kind is kept on the code too, so a join can be checked before actually joining.
+  batch.set(doc(db, 'inviteCodes', code), { groupId: groupRef.id, ...(crewCharacter ? { kind: FANTASTIC6_KIND } : {}) })
   await withTimeout(batch.commit())
 
   return groupRef.id
@@ -143,12 +153,25 @@ export interface JoinGroupResult {
   duplicateNames: string[]
 }
 
-export async function joinGroupByCode(code: string, uid: string): Promise<JoinGroupResult> {
+function checkCodeKind(kind: unknown, crewCharacter?: string) {
+  if (crewCharacter && kind !== FANTASTIC6_KIND) {
+    throw new Error("That code isn't for a Fantastic 6 group.")
+  }
+  if (!crewCharacter && kind === FANTASTIC6_KIND) {
+    throw new Error("That's a Fantastic 6 group — join it from Fantastic 6 in the menu.")
+  }
+}
+
+/**
+ * Joins a group by invite code. Passing `crewCharacter` joins a Fantastic 6 group as that
+ * crew character (and only accepts Fantastic 6 codes).
+ */
+export async function joinGroupByCode(code: string, uid: string, crewCharacter?: string): Promise<JoinGroupResult> {
   let groupId: string
   let existingMemberIds: string[]
 
   if (!isFirebaseConfigured) {
-    const result = localBackend.joinGroup(code, uid)
+    const result = localBackend.joinGroup(code, uid, (kind) => checkCodeKind(kind, crewCharacter))
     groupId = result.groupId
     existingMemberIds = result.existingMemberIds
   } else {
@@ -156,6 +179,7 @@ export async function joinGroupByCode(code: string, uid: string): Promise<JoinGr
     if (!codeSnap.exists()) {
       throw new Error('No group found with that code')
     }
+    checkCodeKind(codeSnap.data().kind, crewCharacter)
 
     groupId = codeSnap.data().groupId as string
     const groupRef = doc(db, 'groups', groupId)
@@ -165,6 +189,12 @@ export async function joinGroupByCode(code: string, uid: string): Promise<JoinGr
     existingMemberIds = groupSnap.data()?.memberIds ?? []
   }
 
+  if (crewCharacter) {
+    await claimFantastic6Character(groupId, uid, crewCharacter)
+    // Crew are identified by character, not name, so name clashes don't matter here.
+    return { groupId, duplicateNames: [] }
+  }
+
   const duplicateNames = await findDuplicateNames(
     existingMemberIds.filter((memberId) => memberId !== uid),
     uid,
@@ -172,50 +202,7 @@ export async function joinGroupByCode(code: string, uid: string): Promise<JoinGr
   return { groupId, duplicateNames }
 }
 
-/**
- * Joins the shared Fantastic 6 group using the secret code, creating it the first time anyone
- * enters the code. The code (already verified by the caller) doubles as its invite-code doc id.
- */
-export async function enterFantastic6Group(secretCode: string, uid: string): Promise<string> {
-  const code = normalizeFantastic6Code(secretCode)
-
-  if (!isFirebaseConfigured) {
-    return localBackend.joinOrCreateGroup(code, uid, { name: FANTASTIC6_GROUP_NAME, kind: FANTASTIC6_KIND })
-  }
-
-  await auth.authStateReady()
-  const codeRef = doc(db, 'inviteCodes', code)
-
-  const join = async (groupId: string) => {
-    await withTimeout(updateDoc(doc(db, 'groups', groupId), { memberIds: arrayUnion(uid) }))
-    return groupId
-  }
-
-  const existing = await withTimeout(getDoc(codeRef))
-  if (existing.exists()) return join(existing.data().groupId as string)
-
-  const groupRef = doc(collection(db, 'groups'))
-  const batch = writeBatch(db)
-  batch.set(groupRef, {
-    name: FANTASTIC6_GROUP_NAME,
-    inviteCode: code,
-    kind: FANTASTIC6_KIND,
-    memberIds: [uid],
-    createdAt: serverTimestamp(),
-  })
-  batch.set(codeRef, { groupId: groupRef.id })
-  try {
-    await withTimeout(batch.commit())
-    return groupRef.id
-  } catch (err) {
-    // Someone else created it at the same moment — join theirs instead.
-    const created = await withTimeout(getDoc(codeRef))
-    if (created.exists()) return join(created.data().groupId as string)
-    throw err
-  }
-}
-
-/** Records which crew character this account is in the Fantastic 6 group (replacing any earlier pick). */
+/** Records which crew character this account is playing in a Fantastic 6 group (replacing any earlier pick). */
 export async function claimFantastic6Character(groupId: string, uid: string, characterId: string) {
   if (!isFirebaseConfigured) {
     localBackend.setCrew(groupId, uid, characterId)

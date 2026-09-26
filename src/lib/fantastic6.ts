@@ -2,7 +2,6 @@ import { F6_CHARACTERS } from '../components/characters/characterData'
 import type { UserRecord } from './users'
 
 export const FANTASTIC6_KIND = 'fantastic6'
-export const FANTASTIC6_GROUP_NAME = 'Fantastic 6'
 
 export interface Fantastic6Member {
   id: string
