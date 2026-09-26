@@ -7,23 +7,9 @@ export const FANTASTIC6_GROUP_NAME = 'Fantastic 6'
 export interface Fantastic6Member {
   id: string
   name: string
-  tagline: string
 }
 
-const TAGLINES: Record<string, string> = {
-  'f6-ajji': 'Tiny, bubbly & never stops talking',
-  'f6-pk': 'Tall, gorgeous & a short fuse',
-  'f6-goat': 'Curls, specs & that goatee',
-  'f6-ma': 'The athletic topper',
-  'f6-dandan': 'Logical, practical & that moustache',
-  'f6-bro': 'Gamer mode: always on',
-}
-
-export const FANTASTIC6: Fantastic6Member[] = F6_CHARACTERS.map((c) => ({
-  id: c.id,
-  name: c.name,
-  tagline: TAGLINES[c.id] ?? '',
-}))
+export const FANTASTIC6: Fantastic6Member[] = F6_CHARACTERS.map((c) => ({ id: c.id, name: c.name }))
 
 /** In the Fantastic 6 group, expenses are split between these fixed crew ids rather than signed-in accounts. */
 export const FANTASTIC6_IDS = FANTASTIC6.map((m) => m.id)

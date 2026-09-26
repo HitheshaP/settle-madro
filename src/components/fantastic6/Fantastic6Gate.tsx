@@ -6,39 +6,59 @@ import Button from '../ui/Button'
 import TextInput from '../ui/TextInput'
 import CharacterAvatar from '../characters/CharacterAvatar'
 import { useAppStore } from '../../lib/store'
-import { enterFantastic6Group } from '../../lib/groups'
+import { claimFantastic6Character, enterFantastic6Group, subscribeToGroup, type Group } from '../../lib/groups'
 import { FANTASTIC6, isFantastic6Code } from '../../lib/fantastic6'
 
 interface Fantastic6GateProps {
   open: boolean
   onClose: () => void
-  /** 'pick' skips the code step — used to change your character once already unlocked */
+  /** 'pick' skips the code step — used from inside the group to change your character */
   mode?: 'unlock' | 'pick'
-  /** Group to pick for, when opened from inside the Fantastic 6 group */
+  /** Required for 'pick' mode */
   groupId?: string
 }
+
+type Step = 'code' | 'loading' | 'pick'
 
 export default function Fantastic6Gate({ open, onClose, mode = 'unlock', groupId: groupIdProp }: Fantastic6GateProps) {
   const navigate = useNavigate()
   const user = useAppStore((state) => state.user)
-  const fantastic6 = useAppStore((state) => state.fantastic6)
-  const unlockFantastic6 = useAppStore((state) => state.unlockFantastic6)
 
-  const [step, setStep] = useState<'code' | 'pick'>(mode === 'pick' ? 'pick' : 'code')
+  const [step, setStep] = useState<Step>('code')
   const [code, setCode] = useState('')
-  const [groupId, setGroupId] = useState<string | null>(groupIdProp ?? fantastic6?.groupId ?? null)
-  const [me, setMe] = useState<string | null>(fantastic6?.me ?? null)
+  const [groupId, setGroupId] = useState<string | null>(null)
+  const [group, setGroup] = useState<Group | null>(null)
+  const [me, setMe] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     if (!open) return
-    setStep(mode === 'pick' ? 'pick' : 'code')
+    setStep(mode === 'pick' ? 'loading' : 'code')
     setCode('')
     setError(null)
-    setGroupId(groupIdProp ?? fantastic6?.groupId ?? null)
-    setMe(fantastic6?.me ?? null)
-  }, [open, mode, fantastic6, groupIdProp])
+    setGroup(null)
+    setGroupId(mode === 'pick' ? (groupIdProp ?? null) : null)
+  }, [open, mode, groupIdProp])
+
+  useEffect(() => {
+    if (!open || !groupId) return
+    return subscribeToGroup(groupId, setGroup)
+  }, [open, groupId])
+
+  // Once the group has loaded: returning crew go straight in, newcomers pick a character.
+  useEffect(() => {
+    if (step !== 'loading' || !group || !groupId || !user) return
+    const mine = group.crew?.[user.uid] ?? null
+    if (mine && mode === 'unlock') {
+      setStep('code') // leave 'loading' so this only fires once
+      onClose()
+      navigate(`/groups/${groupId}`)
+      return
+    }
+    setMe(mine)
+    setStep('pick')
+  }, [step, group, groupId, user, mode, onClose, navigate])
 
   const handleCode = async () => {
     if (!user || !code.trim()) return
@@ -50,7 +70,7 @@ export default function Fantastic6Gate({ open, onClose, mode = 'unlock', groupId
         return
       }
       setGroupId(await enterFantastic6Group(code, user.uid))
-      setStep('pick')
+      setStep('loading')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please retry.')
     } finally {
@@ -58,16 +78,31 @@ export default function Fantastic6Gate({ open, onClose, mode = 'unlock', groupId
     }
   }
 
-  const handlePick = () => {
-    if (!groupId || !me) return
-    unlockFantastic6({ groupId, me })
-    onClose()
-    navigate(`/groups/${groupId}`)
+  const handlePick = async () => {
+    if (!groupId || !me || !user) return
+    setError(null)
+    setBusy(true)
+    try {
+      await claimFantastic6Character(groupId, user.uid, me)
+      onClose()
+      if (mode === 'unlock') navigate(`/groups/${groupId}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save your character. Please retry.')
+    } finally {
+      setBusy(false)
+    }
   }
+
+  // Characters already picked by someone else can't be picked again.
+  const takenBy = new Map(
+    Object.entries(group?.crew ?? {})
+      .filter(([uid]) => uid !== user?.uid)
+      .map(([uid, characterId]) => [characterId, uid]),
+  )
 
   return (
     <Modal open={open} onClose={onClose}>
-      {step === 'code' ? (
+      {step === 'code' && (
         <>
           <div className="mb-5 flex items-center gap-3">
             <motion.div
@@ -86,7 +121,6 @@ export default function Fantastic6Gate({ open, onClose, mode = 'unlock', groupId
           </div>
           <TextInput
             label="Secret code"
-            placeholder="••••"
             value={code}
             onChange={(event) => setCode(event.target.value)}
             onKeyDown={(event) => event.key === 'Enter' && handleCode()}
@@ -101,32 +135,38 @@ export default function Fantastic6Gate({ open, onClose, mode = 'unlock', groupId
             {busy ? 'Checking...' : 'Enter'}
           </Button>
         </>
-      ) : (
+      )}
+
+      {step === 'loading' && (
+        <p className="py-8 text-center text-sm font-medium text-apple-text-secondary">Opening Fantastic 6...</p>
+      )}
+
+      {step === 'pick' && (
         <>
-          <h2 className="text-xl font-bold tracking-tight text-apple-text">Who are you? 👀</h2>
-          <p className="mb-5 mt-1 text-xs font-medium text-apple-text-secondary">
-            Pick your character. You'll be the default payer for expenses you add.
-          </p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <h2 className="mb-5 text-xl font-bold tracking-tight text-apple-text">Who are you? 👀</h2>
+          <div className="grid grid-cols-3 gap-3">
             {FANTASTIC6.map((member) => {
               const selected = me === member.id
+              const taken = takenBy.has(member.id)
               return (
                 <button
                   key={member.id}
                   onClick={() => setMe(member.id)}
-                  className={`flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-center transition-colors duration-200 ${
+                  disabled={taken}
+                  className={`flex flex-col items-center gap-1.5 rounded-2xl border p-2.5 text-center transition-colors duration-200 disabled:opacity-35 ${
                     selected ? 'border-apple-accent bg-apple-accent-dim' : 'border-apple-border bg-white/[0.03]'
                   }`}
                 >
-                  <CharacterAvatar characterId={member.id} size={64} selected={selected} />
+                  <CharacterAvatar characterId={member.id} size={60} selected={selected} />
                   <span className="text-sm font-bold text-apple-text">{member.name}</span>
-                  <span className="text-[10px] font-medium leading-tight text-apple-text-secondary">{member.tagline}</span>
+                  {taken && <span className="text-[10px] font-semibold text-apple-text-secondary">Taken</span>}
                 </button>
               )
             })}
           </div>
-          <Button className="mt-6 w-full py-4 text-sm font-semibold" disabled={!me || !groupId} onClick={handlePick}>
-            {mode === 'pick' ? 'Save' : "Let's go ✨"}
+          {error && <p className="mt-2.5 text-xs font-medium text-rose-500">{error}</p>}
+          <Button className="mt-6 w-full py-4 text-sm font-semibold" disabled={busy || !me} onClick={handlePick}>
+            {busy ? 'Saving...' : mode === 'pick' ? 'Save' : "Let's go ✨"}
           </Button>
         </>
       )}

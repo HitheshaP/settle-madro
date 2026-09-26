@@ -8,6 +8,7 @@ import CharacterAvatar from '../components/characters/CharacterAvatar'
 import Fantastic6Gate from '../components/fantastic6/Fantastic6Gate'
 import {
   groupParticipants,
+  groupProfileIds,
   isFantastic6Group,
   subscribeToExpenses,
   subscribeToGroup,
@@ -18,6 +19,7 @@ import { fantastic6Profile } from '../lib/fantastic6'
 import { useProfiles } from '../lib/useProfiles'
 import { useOnlineStatus } from '../lib/useOnlineStatus'
 import { useAppStore } from '../lib/store'
+import { useColorfulMode } from '../lib/useColorfulMode'
 
 export default function Group() {
   const { groupId } = useParams<{ groupId: string }>()
@@ -29,10 +31,11 @@ export default function Group() {
   const [group, setGroup] = useState<GroupData | null>(null)
   const [expenses, setExpenses] = useState<Expense[]>([])
   const participants = group ? groupParticipants(group) : []
-  const profiles = useProfiles(participants)
+  const profiles = useProfiles(groupProfileIds(group))
   const f6 = isFantastic6Group(group)
-  const myCrewId = useAppStore((state) => state.fantastic6?.me)
+  const myCrewId = currentUser ? group?.crew?.[currentUser.uid] : undefined
   const [pickOpen, setPickOpen] = useState(false)
+  useColorfulMode(f6)
 
   const routeDuplicateNames = (location.state as { duplicateNames?: string[] } | null)?.duplicateNames
   const [duplicateNames, setDuplicateNames] = useState<string[]>(routeDuplicateNames ?? [])
@@ -81,11 +84,18 @@ export default function Group() {
         </h1>
         {f6 ? (
           <p className="text-xs font-medium tracking-wide text-apple-text-secondary">
-            You're <span className="font-bold text-apple-text">{myCrewId ? fantastic6Profile(myCrewId).name : '...'}</span>
-            {' · '}
+            {myCrewId ? (
+              <>
+                You're <span className="font-bold text-apple-text">{fantastic6Profile(myCrewId).name}</span>
+                {' · '}
+              </>
+            ) : (
+              "You haven't picked your character · "
+            )}
             <button onClick={() => setPickOpen(true)} className="font-semibold text-apple-accent">
-              change
+              {myCrewId ? 'change' : 'pick now'}
             </button>
+            {` · ${participants.length} of 6 in`}
           </p>
         ) : group && (
           <p className="text-xs text-apple-text-secondary font-medium tracking-wide">
