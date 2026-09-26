@@ -20,8 +20,6 @@ import {
 import { useProfiles } from '../lib/useProfiles'
 import { useColorfulMode } from '../lib/useColorfulMode'
 
-const SMALL_AMOUNT_THRESHOLD = 500
-
 function settlementKey(settlement: SimplifiedSettlement) {
   return `${settlement.from}-${settlement.to}-${settlement.amount}`
 }
@@ -139,7 +137,7 @@ export default function SettleUp() {
           <SettleAnimation
             fromCharacterId={profiles[animating.from]?.characterId ?? ''}
             toCharacterId={profiles[animating.to]?.characterId ?? ''}
-            variant={animating.amount < SMALL_AMOUNT_THRESHOLD ? 'coin' : 'cake'}
+            amount={animating.amount}
             onComplete={() => finishSettle(animating)}
           />
         )}
