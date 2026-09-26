@@ -10,6 +10,7 @@ const Groups = lazy(() => import('./pages/Groups'))
 const Group = lazy(() => import('./pages/Group'))
 const AddExpense = lazy(() => import('./pages/AddExpense'))
 const SettleUp = lazy(() => import('./pages/SettleUp'))
+const Fantastic6 = lazy(() => import('./pages/Fantastic6'))
 
 function PageLoader() {
   return (
@@ -64,6 +65,14 @@ export default function App() {
         element={
           <RequireOnboarding>
             <Groups />
+          </RequireOnboarding>
+        }
+      />
+      <Route
+        path="/fantastic6"
+        element={
+          <RequireOnboarding>
+            <Fantastic6 />
           </RequireOnboarding>
         }
       />

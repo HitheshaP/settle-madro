@@ -92,38 +92,24 @@ export const localBackend = {
     return onChange(emit)
   },
 
-  createGroup(name: string, ownerUid: string) {
+  createGroup(name: string, ownerUid: string, extra: Pick<LocalGroup, 'kind' | 'crew'> = {}) {
     const db = load()
     const id = randomId('group')
-    db.groups[id] = { name, inviteCode: randomInviteCode(), memberIds: [ownerUid], createdAt: Date.now() }
+    db.groups[id] = { name, inviteCode: randomInviteCode(), memberIds: [ownerUid], ...extra, createdAt: Date.now() }
     save(db)
     return id
   },
 
-  joinGroup(code: string, uid: string) {
+  joinGroup(code: string, uid: string, checkKind: (kind: LocalGroup['kind']) => void = () => {}) {
     const db = load()
     const entry = Object.entries(db.groups).find(([, g]) => g.inviteCode === code)
     if (!entry) throw new Error('No group found with that code')
     const [id, group] = entry
+    checkKind(group.kind)
     const existingMemberIds = [...group.memberIds]
     if (!group.memberIds.includes(uid)) group.memberIds.push(uid)
     save(db)
     return { groupId: id, existingMemberIds }
-  },
-
-  joinOrCreateGroup(code: string, uid: string, init: { name: string; kind?: LocalGroup['kind'] }) {
-    const db = load()
-    const entry = Object.entries(db.groups).find(([, g]) => g.inviteCode === code)
-    if (entry) {
-      const [id, group] = entry
-      if (!group.memberIds.includes(uid)) group.memberIds.push(uid)
-      save(db)
-      return id
-    }
-    const id = randomId('group')
-    db.groups[id] = { ...init, inviteCode: code, memberIds: [uid], createdAt: Date.now() }
-    save(db)
-    return id
   },
 
   setCrew(groupId: string, uid: string, characterId: string) {

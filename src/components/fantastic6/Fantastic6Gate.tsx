@@ -6,103 +6,54 @@ import Button from '../ui/Button'
 import TextInput from '../ui/TextInput'
 import CharacterAvatar from '../characters/CharacterAvatar'
 import { useAppStore } from '../../lib/store'
-import { claimFantastic6Character, enterFantastic6Group, subscribeToGroup, type Group } from '../../lib/groups'
 import { FANTASTIC6, isFantastic6Code } from '../../lib/fantastic6'
 
 interface Fantastic6GateProps {
   open: boolean
   onClose: () => void
-  /** 'pick' skips the code step — used from inside the group to change your character */
-  mode?: 'unlock' | 'pick'
-  /** Required for 'pick' mode */
-  groupId?: string
 }
 
-type Step = 'code' | 'loading' | 'pick'
-
-export default function Fantastic6Gate({ open, onClose, mode = 'unlock', groupId: groupIdProp }: Fantastic6GateProps) {
+/** Secret code → "Who are you?" → the Fantastic 6 home, where groups are created or joined. */
+export default function Fantastic6Gate({ open, onClose }: Fantastic6GateProps) {
   const navigate = useNavigate()
-  const user = useAppStore((state) => state.user)
+  const enterFantastic6 = useAppStore((state) => state.enterFantastic6)
 
-  const [step, setStep] = useState<Step>('code')
+  const [step, setStep] = useState<'code' | 'pick'>('code')
   const [code, setCode] = useState('')
-  const [groupId, setGroupId] = useState<string | null>(null)
-  const [group, setGroup] = useState<Group | null>(null)
   const [me, setMe] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     if (!open) return
-    setStep(mode === 'pick' ? 'loading' : 'code')
+    setStep('code')
     setCode('')
+    setMe(null)
     setError(null)
-    setGroup(null)
-    setGroupId(mode === 'pick' ? (groupIdProp ?? null) : null)
-  }, [open, mode, groupIdProp])
-
-  useEffect(() => {
-    if (!open || !groupId) return
-    return subscribeToGroup(groupId, setGroup)
-  }, [open, groupId])
-
-  // Once the group has loaded: returning crew go straight in, newcomers pick a character.
-  useEffect(() => {
-    if (step !== 'loading' || !group || !groupId || !user) return
-    const mine = group.crew?.[user.uid] ?? null
-    if (mine && mode === 'unlock') {
-      setStep('code') // leave 'loading' so this only fires once
-      onClose()
-      navigate(`/groups/${groupId}`)
-      return
-    }
-    setMe(mine)
-    setStep('pick')
-  }, [step, group, groupId, user, mode, onClose, navigate])
+  }, [open])
 
   const handleCode = async () => {
-    if (!user || !code.trim()) return
+    if (!code.trim()) return
     setError(null)
     setBusy(true)
     try {
-      if (!(await isFantastic6Code(code))) {
-        setError("That's not the secret code 🤫")
-        return
-      }
-      setGroupId(await enterFantastic6Group(code, user.uid))
-      setStep('loading')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please retry.')
+      if (await isFantastic6Code(code)) setStep('pick')
+      else setError("That's not the secret code 🤫")
     } finally {
       setBusy(false)
     }
   }
 
-  const handlePick = async () => {
-    if (!groupId || !me || !user) return
-    setError(null)
-    setBusy(true)
-    try {
-      await claimFantastic6Character(groupId, user.uid, me)
-      onClose()
-      if (mode === 'unlock') navigate(`/groups/${groupId}`)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save your character. Please retry.')
-    } finally {
-      setBusy(false)
-    }
+  const handlePick = () => {
+    if (!me) return
+    enterFantastic6(me)
+    onClose()
+    navigate('/fantastic6')
   }
-
-  // Characters already picked by someone else can't be picked again.
-  const takenBy = new Map(
-    Object.entries(group?.crew ?? {})
-      .filter(([uid]) => uid !== user?.uid)
-      .map(([uid, characterId]) => [characterId, uid]),
-  )
 
   return (
     <Modal open={open} onClose={onClose}>
-      {step === 'code' && (
+      {step === 'code' ? (
         <>
           <div className="mb-5 flex items-center gap-3">
             <motion.div
@@ -135,38 +86,28 @@ export default function Fantastic6Gate({ open, onClose, mode = 'unlock', groupId
             {busy ? 'Checking...' : 'Enter'}
           </Button>
         </>
-      )}
-
-      {step === 'loading' && (
-        <p className="py-8 text-center text-sm font-medium text-apple-text-secondary">Opening Fantastic 6...</p>
-      )}
-
-      {step === 'pick' && (
+      ) : (
         <>
           <h2 className="mb-5 text-xl font-bold tracking-tight text-apple-text">Who are you? 👀</h2>
           <div className="grid grid-cols-3 gap-3">
             {FANTASTIC6.map((member) => {
               const selected = me === member.id
-              const taken = takenBy.has(member.id)
               return (
                 <button
                   key={member.id}
                   onClick={() => setMe(member.id)}
-                  disabled={taken}
-                  className={`flex flex-col items-center gap-1.5 rounded-2xl border p-2.5 text-center transition-colors duration-200 disabled:opacity-35 ${
+                  className={`flex flex-col items-center gap-1.5 rounded-2xl border p-2.5 text-center transition-colors duration-200 ${
                     selected ? 'border-apple-accent bg-apple-accent-dim' : 'border-apple-border bg-white/[0.03]'
                   }`}
                 >
                   <CharacterAvatar characterId={member.id} size={60} selected={selected} />
                   <span className="text-sm font-bold text-apple-text">{member.name}</span>
-                  {taken && <span className="text-[10px] font-semibold text-apple-text-secondary">Taken</span>}
                 </button>
               )
             })}
           </div>
-          {error && <p className="mt-2.5 text-xs font-medium text-rose-500">{error}</p>}
-          <Button className="mt-6 w-full py-4 text-sm font-semibold" disabled={busy || !me} onClick={handlePick}>
-            {busy ? 'Saving...' : mode === 'pick' ? 'Save' : "Let's go ✨"}
+          <Button className="mt-6 w-full py-4 text-sm font-semibold" disabled={!me} onClick={handlePick}>
+            Let's go ✨
           </Button>
         </>
       )}
