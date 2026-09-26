@@ -647,7 +647,7 @@ function F6Ajji() {
       {/* speech bubble — she's always yapping */}
       <path d="M62 4 H92 Q97 4 97 9 V17 Q97 22 92 22 H74 L68 27 L69 22 H62 Q57 22 57 17 V9 Q57 4 62 4 Z" fill="#fefce8" stroke={INK} strokeWidth="1.8" />
       <text x="77" y="16.5" textAnchor="middle" fontSize="7.5" fontWeight="800" fill={INK} fontFamily="system-ui, sans-serif">
-        bla bla
+        Survey
       </text>
       {/* drawn a little smaller and lower in the frame: she's the short one */}
       <g transform="translate(5 10) scale(0.9)">
