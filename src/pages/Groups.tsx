@@ -35,7 +35,8 @@ export default function Groups() {
 
   useEffect(() => {
     if (!authUser) return
-    return subscribeToUserGroups(authUser.uid, setGroups)
+    // Fantastic 6 lives only behind its secret code in the menu, never in the normal list.
+    return subscribeToUserGroups(authUser.uid, (all) => setGroups(all.filter((g) => !isFantastic6Group(g))))
   }, [authUser])
 
   const closeModal = () => {

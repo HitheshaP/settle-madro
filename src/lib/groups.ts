@@ -26,6 +26,8 @@ export interface Group {
   /** Signed-in accounts with access to the group */
   memberIds: string[]
   kind?: typeof FANTASTIC6_KIND
+  /** Fantastic 6 only: which crew character each member account picked */
+  crew?: Record<string, string>
   createdAt: number
 }
 
@@ -33,8 +35,19 @@ export function isFantastic6Group(group: Pick<Group, 'kind'> | null | undefined)
   return group?.kind === FANTASTIC6_KIND
 }
 
-/** Who expenses can be paid by / split between: the fixed crew for Fantastic 6, otherwise the members. */
+/**
+ * Who expenses can be paid by / split between. In Fantastic 6 that's only the crew characters
+ * someone has actually picked (so 3 friends picking = a group of 3); otherwise the members.
+ */
 export function groupParticipants(group: Group) {
+  if (!isFantastic6Group(group)) return group.memberIds
+  const picked = new Set(Object.values(group.crew ?? {}))
+  return FANTASTIC6_IDS.filter((id) => picked.has(id))
+}
+
+/** Every id a profile may be needed for — in Fantastic 6, old expenses can mention crew who've since left. */
+export function groupProfileIds(group: Group | null) {
+  if (!group) return []
   return isFantastic6Group(group) ? FANTASTIC6_IDS : group.memberIds
 }
 
@@ -44,7 +57,7 @@ function toGroup(id: string, data: DocumentData): Group {
     name: data.name,
     inviteCode: data.inviteCode,
     memberIds: data.memberIds ?? [],
-    ...(data.kind === FANTASTIC6_KIND ? { kind: FANTASTIC6_KIND } : {}),
+    ...(data.kind === FANTASTIC6_KIND ? { kind: FANTASTIC6_KIND, crew: data.crew ?? {} } : {}),
     createdAt: data.createdAt?.toMillis?.() ?? 0,
   }
 }
@@ -200,6 +213,15 @@ export async function enterFantastic6Group(secretCode: string, uid: string): Pro
     if (created.exists()) return join(created.data().groupId as string)
     throw err
   }
+}
+
+/** Records which crew character this account is in the Fantastic 6 group (replacing any earlier pick). */
+export async function claimFantastic6Character(groupId: string, uid: string, characterId: string) {
+  if (!isFirebaseConfigured) {
+    localBackend.setCrew(groupId, uid, characterId)
+    return
+  }
+  await withTimeout(updateDoc(doc(db, 'groups', groupId), { [`crew.${uid}`]: characterId }))
 }
 
 export function subscribeToUserGroups(uid: string, callback: (groups: Group[]) => void) {

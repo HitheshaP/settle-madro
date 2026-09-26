@@ -36,16 +36,10 @@ export default function App() {
     }
   })
 
-  const colorful = useAppStore((state) => state.colorful && state.fantastic6 !== null)
-
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
 
-  useEffect(() => {
-    if (colorful) document.documentElement.setAttribute('data-f6', 'on')
-    else document.documentElement.removeAttribute('data-f6')
-  }, [colorful])
 
   if (showSplash) {
     return (

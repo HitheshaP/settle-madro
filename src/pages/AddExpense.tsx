@@ -8,6 +8,7 @@ import ExpenseCelebration from '../components/animations/ExpenseCelebration'
 import {
   addExpense,
   groupParticipants,
+  groupProfileIds,
   isFantastic6Group,
   subscribeToExpenses,
   subscribeToGroup,
@@ -18,12 +19,12 @@ import { detectExpenseCategory } from '../lib/expenseCategory'
 import { suggestEmoji } from '../lib/expenseEmoji'
 import { useProfiles } from '../lib/useProfiles'
 import { useAppStore } from '../lib/store'
+import { useColorfulMode } from '../lib/useColorfulMode'
 
 export default function AddExpense() {
   const { groupId, expenseId } = useParams<{ groupId: string; expenseId?: string }>()
   const navigate = useNavigate()
   const currentUser = useAppStore((state) => state.user)
-  const myCrewId = useAppStore((state) => state.fantastic6?.me)
   const editing = Boolean(expenseId)
 
   const [group, setGroup] = useState<Group | null>(null)
@@ -42,7 +43,8 @@ export default function AddExpense() {
 
   const participants = group ? groupParticipants(group) : []
   const f6 = isFantastic6Group(group)
-  const profiles = useProfiles(participants)
+  const profiles = useProfiles(groupProfileIds(group))
+  useColorfulMode(f6)
 
   useEffect(() => {
     if (!groupId) return
@@ -51,11 +53,11 @@ export default function AddExpense() {
       if (!nextGroup || editing) return
       const people = groupParticipants(nextGroup)
       // Default payer: you (your crew character in Fantastic 6). Default split: everyone.
-      const me = isFantastic6Group(nextGroup) ? myCrewId : currentUser?.uid
+      const me = currentUser && isFantastic6Group(nextGroup) ? nextGroup.crew?.[currentUser.uid] : currentUser?.uid
       setPaidBy((prev) => prev || (me && people.includes(me) ? me : ''))
       setSplitBetween((prev) => (prev.length ? prev : people))
     })
-  }, [groupId, editing, myCrewId, currentUser?.uid])
+  }, [groupId, editing, currentUser])
 
   // Edit mode: prefill the form once from the saved expense.
   useEffect(() => {

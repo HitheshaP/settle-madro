@@ -640,7 +640,7 @@ function SparkleStar({ x, y, r, color }: { x: number; y: number; r: number; colo
   )
 }
 
-// Ajji — short, cute, bubbly and never stops talking
+// Ajji — a beautiful, bubbly (and short) woman with gorgeous wavy hair, who never stops talking
 function F6Ajji() {
   return (
     <>
@@ -649,23 +649,49 @@ function F6Ajji() {
       <text x="77" y="16.5" textAnchor="middle" fontSize="7.5" fontWeight="800" fill={INK} fontFamily="system-ui, sans-serif">
         bla bla
       </text>
-      {/* drawn smaller and lower in the frame: she's the short one */}
-      <g transform="translate(8 14) scale(0.84)">
-        <Body color="#f472b6" />
-        <circle cx="22" cy="24" r="11" fill="#3b2412" stroke={INK} strokeWidth="2.5" />
-        <circle cx="78" cy="24" r="11" fill="#3b2412" stroke={INK} strokeWidth="2.5" />
-        <Head skin="#f1c6a0" />
-        <path d="M23 38 Q23 16 50 16 Q77 16 77 38 Q72 26 60 27 Q55 22 50 28 Q44 22 38 27 Q28 26 23 38 Z" fill="#3b2412" stroke={INK} strokeWidth="2.5" />
-        <SparkleStar x={68} y={22} r={5} color="#fde047" />
-        <ellipse cx="32" cy="53" rx="5.5" ry="3.4" fill="#fb7185" opacity="0.7" />
-        <ellipse cx="68" cy="53" rx="5.5" ry="3.4" fill="#fb7185" opacity="0.7" />
-        <ellipse cx="39" cy="44" rx="3.8" ry="4.6" fill={INK} />
-        <ellipse cx="61" cy="44" rx="3.8" ry="4.6" fill={INK} />
-        <circle cx="40.4" cy="42.4" r="1.5" fill="#fff" />
-        <circle cx="62.4" cy="42.4" r="1.5" fill="#fff" />
-        {/* big open chatty smile */}
-        <path d="M39 54 Q50 70 61 54 Z" fill="#7f1d1d" stroke={INK} strokeWidth="2.4" strokeLinejoin="round" />
-        <path d="M44 60.5 Q50 57 56 60.5 Q50 66 44 60.5 Z" fill="#fb7185" />
+      {/* drawn a little smaller and lower in the frame: she's the short one */}
+      <g transform="translate(5 10) scale(0.9)">
+        <path d="M16 100 Q16 74 50 74 Q84 74 84 100 Z" fill="#db2777" stroke={INK} strokeWidth="3" />
+        <path d="M40 75 Q50 84 60 75" stroke="#fde68a" strokeWidth="1.8" fill="none" />
+        <circle cx="50" cy="83" r="2" fill="#fde68a" />
+        {/* long wavy hair flowing past the shoulders */}
+        <path
+          d="M27 30 Q13 42 21 55 Q11 66 19 78 Q12 89 24 96 L37 93 Q29 85 34 76 Q27 66 33 57 Q27 47 32 37 Z"
+          fill="#4a2c1a"
+          stroke={INK}
+          strokeWidth="2.3"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M73 30 Q87 42 79 55 Q89 66 81 78 Q88 89 76 96 L63 93 Q71 85 66 76 Q73 66 67 57 Q73 47 68 37 Z"
+          fill="#4a2c1a"
+          stroke={INK}
+          strokeWidth="2.3"
+          strokeLinejoin="round"
+        />
+        <ellipse cx="50" cy="45" rx="25" ry="27" fill="#f1c6a0" stroke={INK} strokeWidth="3" />
+        {/* side-swept wavy fringe */}
+        <path
+          d="M24 44 Q19 15 50 13 Q81 15 76 44 Q73 31 65 28 Q59 35 49 27 Q40 34 30 30 Q26 36 24 44 Z"
+          fill="#4a2c1a"
+          stroke={INK}
+          strokeWidth="2.3"
+          strokeLinejoin="round"
+        />
+        <path d="M40 20 Q45 24 43 29 M57 19 Q62 23 60 28" stroke="#7c4a2d" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+        {/* arched brows, almond eyes with lashes */}
+        <path d="M33 37 Q38.5 34 44 36.5 M56 36.5 Q61.5 34 67 37" stroke="#4a2c1a" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+        <ellipse cx="39" cy="44.5" rx="3.2" ry="3.8" fill={INK} />
+        <ellipse cx="61" cy="44.5" rx="3.2" ry="3.8" fill={INK} />
+        <circle cx="40.2" cy="43.2" r="1.2" fill="#fff" />
+        <circle cx="62.2" cy="43.2" r="1.2" fill="#fff" />
+        <path d="M35.8 42.2 L32.6 40.2 M64.2 42.2 L67.4 40.2" stroke={INK} strokeWidth="1.8" strokeLinecap="round" />
+        <ellipse cx="32.5" cy="53" rx="4.5" ry="2.6" fill="#fb7185" opacity="0.35" />
+        <ellipse cx="67.5" cy="53" rx="4.5" ry="2.6" fill="#fb7185" opacity="0.35" />
+        {/* chatty, lipsticked smile */}
+        <path d="M42 57 Q50 65.5 58 57 Q50 60 42 57 Z" fill="#e11d48" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
+        <circle cx="25.5" cy="54" r="2.8" fill="none" stroke="#fbbf24" strokeWidth="1.6" />
+        <circle cx="74.5" cy="54" r="2.8" fill="none" stroke="#fbbf24" strokeWidth="1.6" />
       </g>
     </>
   )

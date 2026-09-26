@@ -1,22 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import ThemeToggle from './ThemeToggle'
 import Modal from './Modal'
 import Button from './Button'
 import Fantastic6Gate from '../fantastic6/Fantastic6Gate'
 import { useInstallPrompt } from '../../lib/useInstallPrompt'
-import { useAppStore } from '../../lib/store'
 
 export default function AppMenu() {
-  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [gateOpen, setGateOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const { isIos, isStandalone, promptInstall, showInstructions, setShowInstructions } = useInstallPrompt()
-  const fantastic6 = useAppStore((state) => state.fantastic6)
-  const colorful = useAppStore((state) => state.colorful)
-  const setColorful = useAppStore((state) => state.setColorful)
 
   useEffect(() => {
     if (!open) return
@@ -29,14 +23,10 @@ export default function AppMenu() {
     return () => document.removeEventListener('pointerdown', handleClick)
   }, [open])
 
+  // The secret code is asked every time — there's no remembered shortcut in.
   const openFantastic6 = () => {
     setOpen(false)
-    if (fantastic6) {
-      setColorful(true)
-      navigate(`/groups/${fantastic6.groupId}`)
-    } else {
-      setGateOpen(true)
-    }
+    setGateOpen(true)
   }
 
   const itemClass =
@@ -91,31 +81,6 @@ export default function AppMenu() {
                 Fantastic 6
               </span>
             </button>
-            {fantastic6 && (
-              <div className="flex items-center justify-between gap-3 rounded-xl px-3 py-3">
-                <span className="flex items-center gap-3 text-sm font-medium text-apple-text">
-                  <span className="text-lg">🌈</span>
-                  Colourful mode
-                </span>
-                <button
-                  onClick={() => setColorful(!colorful)}
-                  role="switch"
-                  aria-checked={colorful}
-                  aria-label="Toggle colourful mode"
-                  className="tap-target relative flex h-8 w-14 items-center rounded-full border border-apple-border px-1"
-                  style={{
-                    background: colorful ? 'linear-gradient(90deg,#ff006e,#8338ec,#3a86ff)' : 'rgba(255,255,255,0.06)',
-                  }}
-                >
-                  <motion.span
-                    layout
-                    transition={{ type: 'spring', stiffness: 500, damping: 32 }}
-                    className="h-6 w-6 rounded-full bg-white shadow-apple-smooth"
-                    style={{ marginLeft: colorful ? 'auto' : 0 }}
-                  />
-                </button>
-              </div>
-            )}
           </motion.div>
         )}
       </AnimatePresence>

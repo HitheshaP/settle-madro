@@ -7,7 +7,8 @@ import CharacterAvatar from '../components/characters/CharacterAvatar'
 import SettleAnimation from '../components/animations/SettleAnimation'
 import { computeNetBalances, simplifyDebts, type SimplifiedSettlement } from '../lib/debtSimplification'
 import {
-  groupParticipants,
+  groupProfileIds,
+  isFantastic6Group,
   recordSettlement,
   subscribeToExpenses,
   subscribeToGroup,
@@ -17,6 +18,7 @@ import {
   type Settlement,
 } from '../lib/groups'
 import { useProfiles } from '../lib/useProfiles'
+import { useColorfulMode } from '../lib/useColorfulMode'
 
 const SMALL_AMOUNT_THRESHOLD = 500
 
@@ -34,7 +36,8 @@ export default function SettleUp() {
   const [resolvedKeys, setResolvedKeys] = useState<Set<string>>(new Set())
   const [animating, setAnimating] = useState<SimplifiedSettlement | null>(null)
 
-  const profiles = useProfiles(group ? groupParticipants(group) : [])
+  const profiles = useProfiles(groupProfileIds(group))
+  useColorfulMode(isFantastic6Group(group))
 
   useEffect(() => {
     if (!groupId) return

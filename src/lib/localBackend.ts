@@ -12,6 +12,7 @@ export interface LocalGroup {
   inviteCode: string
   memberIds: string[]
   kind?: 'fantastic6'
+  crew?: Record<string, string>
   createdAt: number
 }
 
@@ -123,6 +124,14 @@ export const localBackend = {
     db.groups[id] = { ...init, inviteCode: code, memberIds: [uid], createdAt: Date.now() }
     save(db)
     return id
+  },
+
+  setCrew(groupId: string, uid: string, characterId: string) {
+    const db = load()
+    const group = db.groups[groupId]
+    if (!group) throw new Error('Group not found')
+    group.crew = { ...group.crew, [uid]: characterId }
+    save(db)
   },
 
   getUsersOnce(uids: string[]) {
